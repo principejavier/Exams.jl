@@ -1,0 +1,13 @@
+name = "Exams"
+uuid = "22db4ed0-a1bf-4825-ac16-5add3a2cec18"
+authors = ["Javier Principe"]
+version = "0.1.0"
+
+[compat]
+julia = "1.7.2"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
