@@ -3,7 +3,7 @@ function generate_exam(nump)
     # Optional call, "spanish" by default, "catalan" and "engish" also available
     # set_language("spanish") 
     # Optional call, "exam" by default, any string possible
-    # set_basename("exam")
+    # set_prefix("exam")
     # Define text to print
     text["spanish"]["course_title"] = "Mecánica 1 (M1)"
     text["spanish"]["exam_title"] = "Primer parcial"
@@ -51,6 +51,10 @@ function free_fall(vars,vars_out)
         question2, result2 = quest2latex("la velocidad que alcanza al tocar el suelo (en unitname),", v,"km/h");
         question3, result3 = quest2latex("el peso del cuerpo (en unitname).", P,"N");
     elseif language=="catalan"
+        problem = "Un cos de massa $mass_out és llançat cap amunt des d'una alçada $h0_out a una velocitat $v0_out. L'acceleració local de la gravetat és $g_out. Determinar: \\\\ \n"
+        question1, result1 = quest2latex("el temps que triga a caure a terra (en unitname),", t,"s");
+        question2, result2 = quest2latex("la velocitat que arriba a tenir al tocar a terra (en unitname),", v,"km/h");
+        question3, result3 = quest2latex("el pes del cos (en unitname).", P,"N");
     elseif language=="english"
     end
     #figure = printfig(0.3,"fig:caidalibre","Cuerpo en caída libre","ball");

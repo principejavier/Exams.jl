@@ -4,7 +4,6 @@ module Exams
 
 using CSV
 using DataFrames
-#using Latexify
 using Mustache
 using Unitful
 import Unitful:
@@ -29,7 +28,6 @@ const rpm = minute^-1
 const h = hr
 const gal = 231inch^3
 
-export set_graphics_path
 export generate_permutations
 export var2latex
 export unit
@@ -37,6 +35,8 @@ export printfig
 export printfig_wrapped
 export quest2latex
 export language
+export set_prefix
+export set_language
 export text
 
 export rad, °,        # Angles
@@ -56,7 +56,7 @@ export rad, °,        # Angles
     mW, W, kW, MW,
     rpm, h, gal
 
-latex_template="""
+const latex_head="""
 \\documentclass[11pt]{article}
 \\usepackage{amssymb,amsmath}
 \\usepackage[utf8]{inputenc}  % handle accents in pdf, using it causes errors in xml
@@ -85,7 +85,7 @@ latex_template="""
   \\begin{center}
     \\begin{tabular}{|l|l|l|}
       \\hline
-      \\textbf{ {{{course_title}}} } \\quad & {{{exam_title}}} {{{exam_date}}} \\quad \\quad \\quad \\quad \\quad & {{{permutation_name}}} {{{permutation_num}}} \\\\
+      {\\bf {{{course_title}}} } \\quad & {{{exam_title}}} {{{exam_date}}} \\quad \\quad \\quad \\quad \\quad & {{{permutation_name}}} {{{permutation_num}}} \\\\
       \\hline
       {{student_id}}: & \\multicolumn{2}{|l|}{ {{student_name}}: } \\\\ \\hline
       \\multicolumn{3}{|l|}{
@@ -98,100 +98,9 @@ latex_template="""
   \\end{center}
 \\end{table}
 
-
-"""
-
-
-const latex_head = """
-\\documentclass[11pt]{article}
-\\usepackage{amssymb,amsmath}
-\\usepackage[utf8]{inputenc}  % handle accents in pdf, using it causes errors in xml
-\\usepackage{unicode-math}    % Correctly handles unicode characters (degree) in pdf, only with lualatex
-\\usepackage[catalan]{babel} % hyphentation
-\\usepackage{wrapfig}
-\\usepackage{graphics}
-\\usepackage{pgf}
-\\usepackage{tikz}
-\\usepackage{hyperref}
-\\usepackage[top=1.5cm,bottom=2cm,right=2cm,left=2cm]{geometry}
-\\renewcommand{\\figurename}{Figura}
-\\renewcommand{\\tablename}{Tabla}
-\\linespread{1.3}
-\\parindent 0mm
-\\parskip 3mm
-\\textfloatsep 6pt
-\\floatsep  6pt
-\\intextsep 6pt
-\\graphicspath{{localpath}}
-
-\\begin{document}
-\\pagestyle{empty}
-
-"""
-
-const latex_begin_spanish="""
-\\begin{table}[t]
-  \\begin{center}
-    \\begin{tabular}{|l|l|l|}
-      \\hline
-      \\textbf{Mecánica de Fluidos (MF)} \\quad & Primer parcial 30/03/2022 \\quad \\quad \\quad \\quad \\quad & Permutación pppp \\\\
-      \\hline
-      DNI: & \\multicolumn{2}{|l|}{Nombre:} \\\\ \\hline
-      \\multicolumn{3}{|l|}{
-      \\begin{minipage}{\\textwidth}
-      \\vspace{2mm}
-      Sólo hay una respuesta correcta para cada pregunta que debe ser marcada en la hoja de respuestas {\\bf llenando completamente el rectángulo correspondiente}. Cada respuesta incorrecta {\\bf resta un 25\\%} del valor de una correcta. En la hoja de respuestas marcar el DNI (o NIE o pasaporte) y la permutación.
-      \\end{minipage}}
-      \\\\ \\hline
-    \\end{tabular}
-  \\end{center}
-\\end{table}
-
-"""
-
-const latex_begin_catalan="""
-\\begin{table}[t]
-  \\begin{center}
-    \\begin{tabular}{|l|l|l|}
-      \\hline
-      \\textbf{Mecànica de Fluids (MF)} \\quad & Primer parcial 30/03/2022 \\quad \\quad \\quad \\quad \\quad & Permutació pppp \\\\
-      \\hline
-      DNI: & \\multicolumn{2}{|l|}{Nom:} \\\\ \\hline
-      \\multicolumn{3}{|l|}{
-      \\begin{minipage}{\\textwidth}
-      \\vspace{2mm}
-      Només hi ha una resposta correcta per a cada pregunta, marcar-la en la fulla de respostes {\\bf emplenant completament el rectangle corresponent}.  Cada resposta incorrecta {\\bf resta un 25\\%} del valor d'una correcta. En la fulla de respostes marcar el DNI (o NIE o passaport) i la permutació.
-      \\end{minipage}}
-      \\\\ \\hline
-    \\end{tabular}
-  \\end{center}
-\\end{table}
-
-"""
-
-const latex_begin_english="""
-\\begin{table}[t]
-  \\begin{center}
-    \\begin{tabular}{|l|l|l|}
-      \\hline
-      \\textbf{Fluid mechanics (MF)} \\quad & First exam 30/03/2022 \\quad \\quad \\quad \\quad \\quad & Permutation pppp \\\\
-      \\hline
-      DNI: & \\multicolumn{2}{|l|}{Name:} \\\\ \\hline
-      \\multicolumn{3}{|l|}{
-      \\begin{minipage}{\\textwidth}
-      \\vspace{2mm}
-      There is only one correct answer and answers need to be inputted into the provided answer sheet by {\\bf completely filling in the rectangle}. Each incorrect answer {\\bf subtracts 25\\%} of the value of a correct answer. On the answer sheet fill your ID (DNI, NIE or passport) and exam permutation. 
-      \\end{minipage}}
-      \\\\ \\hline
-    \\end{tabular}
-  \\end{center}
-\\end{table}
-
 """
 
 const latex_tail = "\n\\end{document}\n"
-
-graphics_path="../../problemas_evaluacion/"
 
 language = "spanish"
 prefix = "exam"
@@ -244,22 +153,18 @@ function takediag(prod::Iterators.ProductIterator,n)
     return vars
 end
 
-function set_graphics_path(path)
-    global graphics_path
-    graphics_path = path
-end
-function set_basename(name)
+function set_prefix(name)
     global prefix
-    basename = name
+    prefix = name
 end
-function set_language(language)
+function set_language(lang)
     global language
-    langauge = language
+    language = lang
 end
 
-function define_correct_answers(;fresh_run::Bool = false)
+function define_correct_answers()
     global right
-    if !fresh_run && isfile("results.csv")
+    if isfile("results.csv")
         df = CSV.read("results.csv", DataFrame, header=0)
         right = Matrix{Int}(df)
     else
@@ -268,9 +173,9 @@ function define_correct_answers(;fresh_run::Bool = false)
     end
 end
 
-function generate_permutations(all_args, sols; fresh_run::Bool = false)
+function generate_permutations(all_args, sols)
 
-    define_correct_answers(;fresh_run)
+    define_correct_answers()
 
     # all_args is tuple of arrays{tuple}
     @assert length(sols) == length(all_args)
@@ -283,12 +188,11 @@ function generate_permutations(all_args, sols; fresh_run::Bool = false)
         global num_permutation, num_question
         num_permutation = i
         num_question = 0
-        #io_tex, io_csv = open_files(i, filename)
-        #io_tex = open_files(i, filename)
 
-        io_tex = open(filename * "_$i" * ".tex", "w");
+        filename = prefix*"_"*language*"_$i"
+        io_tex = open(filename*".tex","w");
         text[language]["permutation_num"]="$i"
-        render(io_tex,latex_template,text[language])
+        render(io_tex,latex_head,text[language])
 
         # Loop over problems
         for k = 1:num_prob
@@ -306,9 +210,12 @@ function generate_permutations(all_args, sols; fresh_run::Bool = false)
         end
         write(io_tex, latex_tail);
         close(io_tex);
-        texfile = basename(filename * "_$i" * ".tex")
-        pdflatex = `lualatex $(texfile)`
+        pdflatex = `lualatex $(filename)`
         run(pdflatex)
+        run(pdflatex)
+        rm(filename*".aux")
+        rm(filename*".log")
+        rm(filename*".out")
         # close(io_csv);
     end
 
@@ -316,21 +223,6 @@ function generate_permutations(all_args, sols; fresh_run::Bool = false)
 
     return nothing
 
-end
-
-function open_files(id, filename)
-    io_tex = open(filename * "_$id" * ".tex", "w");
-    #io_csv = open(filename * "_$id" * ".csv", "w");
-    write(io_tex, replace(replace(latex_head,"catalan"=>"$language"),"localpath"=>"$graphics_path"));
-    #write(io_tex, replace(latex_head, "catalan" => "$language"));
-    if language == "spanish"
-        write(io_tex, replace(latex_begin_spanish,"pppp" => "$num_permutation"));
-    elseif language == "catalan"
-        write(io_tex, replace(latex_begin_catalan,"pppp" => "$num_permutation"));
-    elseif language == "english"
-        write(io_tex, replace(latex_begin_english,"pppp" => "$num_permutation"));
-    end
-    return io_tex #, io_csv
 end
 
 function printfig_wrapped(width, label, caption, name; vshift=0.0)
@@ -497,8 +389,5 @@ function quest2latex(msg, var, unitname=""; factor1=rand2(), factor2=1.2 + 0.2 *
     return str, "$val"
 
 end
-
-
-
 
 end
