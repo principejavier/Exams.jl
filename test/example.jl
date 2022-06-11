@@ -1,9 +1,25 @@
 function generate_exam(nump)
 
-    set_graphics_path("../assets/")
-    # Optionally select the language and the basename of the output file
-    # set_language("spanish")
+    # Optional call, "spanish" by default, "catalan" and "engish" also available
+    # set_language("spanish") 
+    # Optional call, "exam" by default, any string possible
     # set_basename("exam")
+    # Define text to print
+    text["spanish"]["course_title"] = "Mecánica 1 (M1)"
+    text["spanish"]["exam_title"] = "Primer parcial"
+    text["spanish"]["exam_date"] = "01/01/2000"
+
+    text["catalan"]["course_title"] = "Mecànica 1 (M1)"
+    text["catalan"]["exam_title"] = "Primer parcial"
+    text["catalan"]["exam_date"] = "01/01/2000"
+
+    text["english"]["course_title"] = "Mechanics 1 (M1)"
+    text["english"]["exam_title"] = "First test"
+    text["english"]["exam_date"] = "01/01/2000"
+
+    text["spanish"]["graphics_path"] = "{../assets/}"
+    text["catalan"]["graphics_path"] = "{../assets/}"
+    text["english"]["graphics_path"] = "{../assets/}"
 
     mass=[1kg,2kg];
     h0=[1m,2m];

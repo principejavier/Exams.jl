@@ -4,7 +4,8 @@ module Exams
 
 using CSV
 using DataFrames
-using Latexify
+#using Latexify
+using Mustache
 using Unitful
 import Unitful:
     rad, °,        # Angles
@@ -36,6 +37,7 @@ export printfig
 export printfig_wrapped
 export quest2latex
 export language
+export text
 
 export rad, °,        # Angles
     s, minute, hr, Hz, # Time and frequency
@@ -53,6 +55,52 @@ export rad, °,        # Angles
     Ra, °F, °C, K, # Temperature
     mW, W, kW, MW,
     rpm, h, gal
+
+latex_template="""
+\\documentclass[11pt]{article}
+\\usepackage{amssymb,amsmath}
+\\usepackage[utf8]{inputenc}  % handle accents in pdf, using it causes errors in xml
+\\usepackage{unicode-math}    % Correctly handles unicode characters (degree) in pdf, only with lualatex
+\\usepackage[catalan]{babel} % hyphentation
+\\usepackage{wrapfig}
+\\usepackage{graphics}
+\\usepackage{pgf}
+\\usepackage{tikz}
+\\usepackage{hyperref}
+\\usepackage[top=1.5cm,bottom=2cm,right=2cm,left=2cm]{geometry}
+\\renewcommand{\\figurename}{Figura}
+\\renewcommand{\\tablename}{Tabla}
+\\linespread{1.3}
+\\parindent 0mm
+\\parskip 3mm
+\\textfloatsep 6pt
+\\floatsep  6pt
+\\intextsep 6pt
+\\graphicspath{ {{{graphics_path}}} }
+
+\\begin{document}
+\\pagestyle{empty}
+
+\\begin{table}[t]
+  \\begin{center}
+    \\begin{tabular}{|l|l|l|}
+      \\hline
+      \\textbf{ {{{course_title}}} } \\quad & {{{exam_title}}} {{{exam_date}}} \\quad \\quad \\quad \\quad \\quad & {{{permutation_name}}} {{{permutation_num}}} \\\\
+      \\hline
+      {{student_id}}: & \\multicolumn{2}{|l|}{ {{student_name}}: } \\\\ \\hline
+      \\multicolumn{3}{|l|}{
+      \\begin{minipage}{\\textwidth}
+      \\vspace{2mm}
+      {{{rules}}}
+      \\end{minipage}}
+      \\\\ \\hline
+    \\end{tabular}
+  \\end{center}
+\\end{table}
+
+
+"""
+
 
 const latex_head = """
 \\documentclass[11pt]{article}
@@ -156,6 +204,35 @@ right_names = ["A","B","C","D","E"]
 examio_head1 = ["1","2","3","4","5","6","7","8","9","10","11","12"]  # permutacio
 examio_head2 = ["1","1","1","1","1","1","1","1","1","1","1","1"]  # grup
 
+text = Dict{String,Dict{String, String}}()
+text["spanish"]=Dict{String,String}()
+text["catalan"]=Dict{String,String}()
+text["english"]=Dict{String,String}()
+
+text["spanish"]["rules"]="Sólo hay una respuesta correcta para cada pregunta que debe ser marcada en la hoja de respuestas {\\bf llenando completamente el rectángulo correspondiente}. Cada respuesta incorrecta {\\bf resta un 25\\%} del valor de una correcta. En la hoja de respuestas marcar el DNI (o NIE o pasaporte) y la permutación."
+text["catalan"]["rules"]="Només hi ha una resposta correcta per a cada pregunta, marcar-la en la fulla de respostes {\\bf emplenant completament el rectangle corresponent}.  Cada resposta incorrecta {\\bf resta un 25\\%} del valor d'una correcta. En la fulla de respostes marcar el DNI (o NIE o passaport) i la permutació."
+text["english"]["rules"]="There is only one correct answer and answers need to be inputted into the provided answer sheet by {\\bf completely filling in the rectangle}. Each incorrect answer {\\bf subtracts 25\\%} of the value of a correct answer. On the answer sheet fill your ID (DNI, NIE or passport) and exam permutation. "
+
+text["spanish"]["language"]="spanish"
+text["catalan"]["language"]="catalan"
+text["english"]["language"]="english"
+
+text["spanish"]["student_id"]="DNI"
+text["catalan"]["student_id"]="DNI"
+text["english"]["student_id"]="ID"
+
+text["spanish"]["student_name"]="Nombre"
+text["catalan"]["student_name"]="Nom"
+text["english"]["student_name"]="Name"
+
+text["spanish"]["permutation_name"]="Permutación"
+text["catalan"]["permutation_name"]="Permutació"
+text["english"]["permutation_name"]="Permutation"
+
+text["spanish"]["permutation_num"]="1"
+text["catalan"]["permutation_num"]="1"
+text["english"]["permutation_num"]="1"
+
 function takediag(prod::Iterators.ProductIterator,n)
     @assert length(prod)>=n^2
     vars=[]
@@ -207,7 +284,12 @@ function generate_permutations(all_args, sols; fresh_run::Bool = false)
         num_permutation = i
         num_question = 0
         #io_tex, io_csv = open_files(i, filename)
-        io_tex = open_files(i, filename)
+        #io_tex = open_files(i, filename)
+
+        io_tex = open(filename * "_$i" * ".tex", "w");
+        text[language]["permutation_num"]="$i"
+        render(io_tex,latex_template,text[language])
+
         # Loop over problems
         for k = 1:num_prob
             args = all_args[k] # k-th array
