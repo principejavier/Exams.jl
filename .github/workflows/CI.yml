@@ -24,6 +24,10 @@ jobs:
         arch:
           - x64
     steps:
+      - name: Install latex
+        run: |
+           sudo apt-get update
+           sudo apt-get install texlive-base -y
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
         with:
