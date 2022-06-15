@@ -118,8 +118,8 @@ text["spanish"]=Dict{String,String}()
 text["catalan"]=Dict{String,String}()
 text["english"]=Dict{String,String}()
 
-text["spanish"]["rules"]="Sólo hay una respuesta correcta para cada pregunta que debe ser marcada en la hoja de respuestas {\\bf llenando completamente el rectángulo correspondiente}. Cada respuesta incorrecta {\\bf resta un 25\\%} del valor de una correcta. En la hoja de respuestas marcar el DNI (o NIE o pasaporte) y la permutación."
-text["catalan"]["rules"]="Només hi ha una resposta correcta per a cada pregunta, marcar-la en la fulla de respostes {\\bf emplenant completament el rectangle corresponent}.  Cada resposta incorrecta {\\bf resta un 25\\%} del valor d'una correcta. En la fulla de respostes marcar el DNI (o NIE o passaport) i la permutació."
+text["spanish"]["rules"]="Sólo hay una respuesta correcta para cada pregunta que debe ser marcada en la hoja de respuestas {\\bf llenando completamente el rectángulo correspondiente}. Cada respuesta incorrecta {\\bf resta un 25\\%} del valor de una correcta. En la hoja de respuestas es necesario marcar el DNI (o NIE o pasaporte) y la permutación."
+text["catalan"]["rules"]="Només hi ha una resposta correcta per a cada pregunta, marcar-la en la fulla de respostes {\\bf emplenant completament el rectangle corresponent}.  Cada resposta incorrecta {\\bf resta un 25\\%} del valor d'una correcta. En la fulla de respostes cal marcar el DNI (o NIE o passaport) i la permutació."
 text["english"]["rules"]="There is only one correct answer and answers need to be inputted into the provided answer sheet by {\\bf completely filling in the rectangle}. Each incorrect answer {\\bf subtracts 25\\%} of the value of a correct answer. On the answer sheet fill your ID (DNI, NIE or passport) and exam permutation. "
 
 text["spanish"]["language"]="spanish"
