@@ -28,6 +28,7 @@ jobs:
         run: |
            sudo apt-get update
            sudo apt-get install texlive-base -y
+           lualatex -v
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
         with:
