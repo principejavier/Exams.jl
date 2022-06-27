@@ -5,21 +5,21 @@ function generate_exam(nump)
     # Optional call, "exam" by default, any string possible
     # set_prefix("exam")
     # Define text to print
-    text["spanish"]["course_title"] = "Mecánica 1 (M1)"
-    text["spanish"]["exam_title"] = "Primer parcial"
-    text["spanish"]["exam_date"] = "01/01/2000"
+    headings["spanish"]["course_title"] = "Mecánica 1 (M1)"
+    headings["spanish"]["exam_title"] = "Primer parcial"
+    headings["spanish"]["exam_date"] = "01/01/2000"
 
-    text["catalan"]["course_title"] = "Mecànica 1 (M1)"
-    text["catalan"]["exam_title"] = "Primer parcial"
-    text["catalan"]["exam_date"] = "01/01/2000"
+    headings["catalan"]["course_title"] = "Mecànica 1 (M1)"
+    headings["catalan"]["exam_title"] = "Primer parcial"
+    headings["catalan"]["exam_date"] = "01/01/2000"
 
-    text["english"]["course_title"] = "Mechanics 1 (M1)"
-    text["english"]["exam_title"] = "First test"
-    text["english"]["exam_date"] = "01/01/2000"
+    headings["english"]["course_title"] = "Mechanics 1 (M1)"
+    headings["english"]["exam_title"] = "First test"
+    headings["english"]["exam_date"] = "01/01/2000"
 
-    text["spanish"]["graphics_path"] = "{../assets/}"
-    text["catalan"]["graphics_path"] = "{../assets/}"
-    text["english"]["graphics_path"] = "{../assets/}"
+    headings["spanish"]["graphics_path"] = "{../assets/}"
+    headings["catalan"]["graphics_path"] = "{../assets/}"
+    headings["english"]["graphics_path"] = "{../assets/}"
 
     mass=[1kg,2kg];
     h0=[1m,2m];
@@ -47,21 +47,20 @@ function free_fall(vars,vars_out)
 
     if language=="spanish" 
         problem = "Un cuerpo de masa $mass_out es lanzado hacia arriba desde una altura $h0_out a una velocidad $v0_out. La aceleración local de la gravedad es $g_out. Determinar: \\\\ \n"
-        question1, result1 = quest2latex("el tiempo que tarda en caer al suelo (en unitname),", t,"s");
-        question2, result2 = quest2latex("la velocidad que alcanza al tocar el suelo (en unitname),", v,"km/h");
-        question3, result3 = quest2latex("el peso del cuerpo (en unitname).", P,"N");
+        question1 = quest2latex("el tiempo que tarda en caer al suelo (en unitname),", t,"s");
+        question2 = quest2latex("la velocidad que alcanza al tocar el suelo (en unitname),", v,"km/h");
+        question3 = quest2latex("el peso del cuerpo (en unitname).", P,"N");
     elseif language=="catalan"
         problem = "Un cos de massa $mass_out és llançat cap amunt des d'una alçada $h0_out a una velocitat $v0_out. L'acceleració local de la gravetat és $g_out. Determinar: \\\\ \n"
-        question1, result1 = quest2latex("el temps que triga a caure a terra (en unitname),", t,"s");
-        question2, result2 = quest2latex("la velocitat que arriba a tenir al tocar a terra (en unitname),", v,"km/h");
-        question3, result3 = quest2latex("el pes del cos (en unitname).", P,"N");
+        question1 = quest2latex("el temps que triga a caure a terra (en unitname),", t,"s");
+        question2 = quest2latex("la velocitat que arriba a tenir al tocar a terra (en unitname),", v,"km/h");
+        question3 = quest2latex("el pes del cos (en unitname).", P,"N");
     elseif language=="english"
     end
     #figure = printfig(0.3,"fig:caidalibre","Cuerpo en caída libre","ball");
     figure = printfig_wrapped(0.3,"fig:caidalibre","Cuerpo en caída libre","ball");
     problem = problem*figure*question1*question2*question3
-    results = result1*"; "*result2*"; "*"\n"
-    return problem, results
+    return problem
 
 end
 

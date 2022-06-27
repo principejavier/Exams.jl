@@ -37,7 +37,7 @@ export quest2latex
 export language
 export set_prefix
 export set_language
-export text
+export headings
 
 export rad, °,        # Angles
     s, minute, hr, Hz, # Time and frequency
@@ -113,34 +113,34 @@ right_names = ["A","B","C","D","E"]
 examio_head1 = ["1","2","3","4","5","6","7","8","9","10","11","12"]  # permutacio
 examio_head2 = ["1","1","1","1","1","1","1","1","1","1","1","1"]  # grup
 
-text = Dict{String,Dict{String, String}}()
-text["spanish"]=Dict{String,String}()
-text["catalan"]=Dict{String,String}()
-text["english"]=Dict{String,String}()
+headings = Dict{String,Dict{String, String}}()
+headings["spanish"]=Dict{String,String}()
+headings["catalan"]=Dict{String,String}()
+headings["english"]=Dict{String,String}()
 
-text["spanish"]["rules"]="Sólo hay una respuesta correcta para cada pregunta que debe ser marcada en la hoja de respuestas {\\bf llenando completamente el rectángulo correspondiente}. Cada respuesta incorrecta {\\bf resta un 25\\%} del valor de una correcta. En la hoja de respuestas es necesario marcar el DNI (o NIE o pasaporte) y la permutación."
-text["catalan"]["rules"]="Només hi ha una resposta correcta per a cada pregunta, marcar-la en la fulla de respostes {\\bf emplenant completament el rectangle corresponent}.  Cada resposta incorrecta {\\bf resta un 25\\%} del valor d'una correcta. En la fulla de respostes cal marcar el DNI (o NIE o passaport) i la permutació."
-text["english"]["rules"]="There is only one correct answer and answers need to be inputted into the provided answer sheet by {\\bf completely filling in the rectangle}. Each incorrect answer {\\bf subtracts 25\\%} of the value of a correct answer. On the answer sheet fill your ID (DNI, NIE or passport) and exam permutation. "
+headings["spanish"]["rules"]="Sólo hay una respuesta correcta para cada pregunta que debe ser marcada en la hoja de respuestas {\\bf llenando completamente el rectángulo correspondiente}. Cada respuesta incorrecta {\\bf resta un 25\\%} del valor de una correcta. En la hoja de respuestas es necesario marcar el DNI (o NIE o pasaporte) y la permutación."
+headings["catalan"]["rules"]="Només hi ha una resposta correcta per a cada pregunta, marcar-la en la fulla de respostes {\\bf emplenant completament el rectangle corresponent}.  Cada resposta incorrecta {\\bf resta un 25\\%} del valor d'una correcta. En la fulla de respostes cal marcar el DNI (o NIE o passaport) i la permutació."
+headings["english"]["rules"]="There is only one correct answer and answers need to be inputted into the provided answer sheet by {\\bf completely filling in the rectangle}. Each incorrect answer {\\bf subtracts 25\\%} of the value of a correct answer. On the answer sheet fill your ID (DNI, NIE or passport) and exam permutation. "
 
-text["spanish"]["language"]="spanish"
-text["catalan"]["language"]="catalan"
-text["english"]["language"]="english"
+headings["spanish"]["language"]="spanish"
+headings["catalan"]["language"]="catalan"
+headings["english"]["language"]="english"
 
-text["spanish"]["student_id"]="DNI"
-text["catalan"]["student_id"]="DNI"
-text["english"]["student_id"]="ID"
+headings["spanish"]["student_id"]="DNI"
+headings["catalan"]["student_id"]="DNI"
+headings["english"]["student_id"]="ID"
 
-text["spanish"]["student_name"]="Nombre"
-text["catalan"]["student_name"]="Nom"
-text["english"]["student_name"]="Name"
+headings["spanish"]["student_name"]="Nombre"
+headings["catalan"]["student_name"]="Nom"
+headings["english"]["student_name"]="Name"
 
-text["spanish"]["permutation_name"]="Permutación"
-text["catalan"]["permutation_name"]="Permutació"
-text["english"]["permutation_name"]="Permutation"
+headings["spanish"]["permutation_name"]="Permutación"
+headings["catalan"]["permutation_name"]="Permutació"
+headings["english"]["permutation_name"]="Permutation"
 
-text["spanish"]["permutation_num"]="1"
-text["catalan"]["permutation_num"]="1"
-text["english"]["permutation_num"]="1"
+headings["spanish"]["permutation_num"]="1"
+headings["catalan"]["permutation_num"]="1"
+headings["english"]["permutation_num"]="1"
 
 function takediag(prod::Iterators.ProductIterator,n)
     @assert length(prod)>=n^2
@@ -191,8 +191,8 @@ function generate_permutations(all_args, sols)
 
         filename = prefix*"_"*language*"_$i"
         io_tex = open(filename*".tex","w");
-        text[language]["permutation_num"]="$i"
-        render(io_tex,latex_head,text[language])
+        headings[language]["permutation_num"]="$i"
+        render(io_tex,latex_head,headings[language])
 
         # Loop over problems
         for k = 1:num_prob
@@ -203,10 +203,9 @@ function generate_permutations(all_args, sols)
                 q[j] = var2latex(p[j])
             end
             write(io_tex, begin_problem(k))
-            problem, results = sols[k](p, q)
+            problem = sols[k](p, q)
             write(io_tex, problem);
             write(io_tex, end_problem())
-            # write(io_csv, results)
         end
         write(io_tex, latex_tail);
         close(io_tex);
@@ -216,7 +215,6 @@ function generate_permutations(all_args, sols)
         rm(filename*".aux")
         rm(filename*".log")
         rm(filename*".out")
-        # close(io_csv);
     end
 
     CSV.write("results_examio.csv", Tables.table(hcat(examio_head1[1:num_perm],examio_head2[1:num_perm],right_names[transpose(right[1:num_question,1:num_perm])])), header=false, delim=";")
@@ -340,7 +338,7 @@ function rand2()
     end
 end
 
-function quest2latex(msg, var, unitname=""; factor1=rand2(), factor2=1.2 + 0.2 * rand(), factor3=0.6 + 0.2 * rand(), factor4=1.6 + 0.2 * rand(), tolerance=0.02, num_digits=4)
+function quest2latex(msg, var, unitname=""; factor1=rand2(), factor2=1.2 + 0.2 * rand(), factor3=0.6 + 0.2 * rand(), factor4=1.6 + 0.2 * rand(),num_digits=4)
 
     # Unit
     if unitname > "" # write it as given and pick the value parsing it
@@ -386,7 +384,7 @@ function quest2latex(msg, var, unitname=""; factor1=rand2(), factor2=1.2 + 0.2 *
     \\end{tabular}
 
     """
-    return str, "$val"
+    return str
 
 end
 
