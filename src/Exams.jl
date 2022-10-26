@@ -100,7 +100,7 @@ const StandardTemplate="""
       {{StudentID}}: & \\multicolumn{2}{|l|}{ {{StudentName}}: } \\\\ \\hline
       \\multicolumn{3}{|l|}{
       \\begin{minipage}{\\textwidth}
-      \vspace{2mm} {{{ExamRules}}} \vspace{2mm} 
+      \\vspace{2mm} {{{ExamRules}}} \\vspace{2mm} 
       \\end{minipage}}
       \\\\ \\hline
     \\end{tabular}

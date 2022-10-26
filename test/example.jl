@@ -27,7 +27,9 @@ function generate_exam(nump)
     add_problem!(exam,WrappedFigure(0.25,-5mm),ALL2ALL,free_fall,mass,h0,v0)
     add_problem!(exam,FloatingFigure(0.3),ALL2ALL,free_fall,mass,h0,v0)
 
-    return exam
+    generate_tex_files(exam)
+    compile_tex_files(exam)
+    return nothing
 end
 
 function free_fall(mass,h0,v0,language=undef,format=undef)
