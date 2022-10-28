@@ -10,6 +10,7 @@ Mustache = "ffc61752-8dc7-55ee-8c37-f3e9cdd09e70"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
+CSV = "0.10"
 Mustache = "1"
 DataFrames = "1"
 Unitful = "1"
