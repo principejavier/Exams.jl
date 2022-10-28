@@ -1,7 +1,5 @@
 module Exams
 
-# Write your package code here.
-
 using CSV
 using DataFrames
 using Mustache
@@ -28,16 +26,25 @@ const rpm = minute^-1
 const h = hr
 const gal = 231inch^3
 
-export generate_permutations
+export StandardTemplate
+export StandardHeadings
+export PrintedExam
+export add_problem!
+export generate_pdf_files
+export generate_tex_files
+export compile_tex_files
+
 export var2latex
-export unit
-export printfig
-export printfig_wrapped
-export quest2latex
-export language
-export set_prefix
-export set_language
-export headings
+export question
+export figure
+export FloatingFigure
+export WrappedFigure
+export ALL2ALL
+export ONE2ONE
+export SPA
+export CAT
+export ENG
+
 
 export rad, °,        # Angles
     s, minute, hr, Hz, # Time and frequency
@@ -56,7 +63,7 @@ export rad, °,        # Angles
     mW, W, kW, MW,
     rpm, h, gal
 
-const latex_head="""
+const StandardTemplate="""
 \\documentclass[11pt]{article}
 \\usepackage{amssymb,amsmath}
 \\usepackage[utf8]{inputenc}  % handle accents in pdf, using it causes errors in xml
@@ -68,6 +75,9 @@ const latex_head="""
 \\usepackage{tikz}
 \\usepackage{hyperref}
 \\usepackage[top=1.5cm,bottom=2cm,right=2cm,left=2cm]{geometry}
+\\usepackage{enumitem}
+\\setlist[enumerate]{left=0pt,topsep=0pt,label={\\bf \\arabic*},resume}
+
 \\renewcommand{\\figurename}{Figura}
 \\renewcommand{\\tablename}{Tabla}
 \\linespread{1.3}
@@ -76,7 +86,7 @@ const latex_head="""
 \\textfloatsep 6pt
 \\floatsep  6pt
 \\intextsep 6pt
-\\graphicspath{ {{{graphics_path}}} }
+\\graphicspath{ {{{GraphicsPath}}} }
 
 \\begin{document}
 \\pagestyle{empty}
@@ -85,62 +95,172 @@ const latex_head="""
   \\begin{center}
     \\begin{tabular}{|l|l|l|}
       \\hline
-      {\\bf {{{course_title}}} } \\quad & {{{exam_title}}} {{{exam_date}}} \\quad \\quad \\quad \\quad \\quad & {{{permutation_name}}} {{{permutation_num}}} \\\\
+      {\\bf {{{CourseTitle}}} } \\quad & {{{ExamTitle}}} {{{ExamDate}}} \\quad \\quad \\quad \\quad \\quad & {{{PermutationName}}} {{{PermutationNum}}} \\\\
       \\hline
-      {{student_id}}: & \\multicolumn{2}{|l|}{ {{student_name}}: } \\\\ \\hline
+      {{StudentID}}: & \\multicolumn{2}{|l|}{ {{StudentName}}: } \\\\ \\hline
       \\multicolumn{3}{|l|}{
       \\begin{minipage}{\\textwidth}
-      \\vspace{2mm}
-      {{{rules}}}
+      \\vspace{2mm} {{{ExamRules}}} \\vspace{2mm} 
       \\end{minipage}}
       \\\\ \\hline
     \\end{tabular}
   \\end{center}
 \\end{table}
 
+\\end{document}
 """
 
 const latex_tail = "\n\\end{document}\n"
 
-language = "spanish"
-prefix = "exam"
-num_question = 0
-num_problem = 0
-num_permutation = 0
+const CAT="catalan"
+const ENG="english"
+const SPA="spanish"
+
 max_questions = 50
-max_permutations = 12
+max_permutations = 10
 right_names = ["A","B","C","D","E"]
-examio_head1 = ["1","2","3","4","5","6","7","8","9","10","11","12"]  # permutacio
-examio_head2 = ["1","1","1","1","1","1","1","1","1","1","1","1"]  # grup
+examio_head1 = ["1","2","3","4","5","6","7","8","9","10"]  # permutacio
+examio_head2 = ["1","1","1","1","1","1","1","1","1","1"]  # grup
 
-headings = Dict{String,Dict{String, String}}()
-headings["spanish"]=Dict{String,String}()
-headings["catalan"]=Dict{String,String}()
-headings["english"]=Dict{String,String}()
+StandardHeadings = Dict{String,Dict{String, String}}()
+StandardHeadings[SPA]=Dict{String,String}()
+StandardHeadings[CAT]=Dict{String,String}()
+StandardHeadings[ENG]=Dict{String,String}()
 
-headings["spanish"]["rules"]="Sólo hay una respuesta correcta para cada pregunta que debe ser marcada en la hoja de respuestas {\\bf llenando completamente el rectángulo correspondiente}. Cada respuesta incorrecta {\\bf resta un 25\\%} del valor de una correcta. En la hoja de respuestas es necesario marcar el DNI (o NIE o pasaporte) y la permutación."
-headings["catalan"]["rules"]="Només hi ha una resposta correcta per a cada pregunta, marcar-la en la fulla de respostes {\\bf emplenant completament el rectangle corresponent}.  Cada resposta incorrecta {\\bf resta un 25\\%} del valor d'una correcta. En la fulla de respostes cal marcar el DNI (o NIE o passaport) i la permutació."
-headings["english"]["rules"]="There is only one correct answer and answers need to be inputted into the provided answer sheet by {\\bf completely filling in the rectangle}. Each incorrect answer {\\bf subtracts 25\\%} of the value of a correct answer. On the answer sheet fill your ID (DNI, NIE or passport) and exam permutation. "
+StandardHeadings[SPA]["ExamRules"]="Sólo hay una respuesta correcta para cada pregunta que debe ser marcada en la hoja de respuestas {\\bf llenando completamente el rectángulo correspondiente}. Cada respuesta incorrecta {\\bf resta un 25\\%} del valor de una correcta. En la hoja de respuestas es necesario marcar el DNI (o NIE o pasaporte) y la permutación."
+StandardHeadings[CAT]["ExamRules"]="Només hi ha una resposta correcta per a cada pregunta, marcar-la en la fulla de respostes {\\bf emplenant completament el rectangle corresponent}.  Cada resposta incorrecta {\\bf resta un 25\\%} del valor d'una correcta. En la fulla de respostes cal marcar el DNI (o NIE o passaport) i la permutació."
+StandardHeadings[ENG]["ExamRules"]="There is only one correct answer and answers need to be inputted into the provided answer sheet by {\\bf completely filling in the rectangle}. Each incorrect answer {\\bf subtracts 25\\%} of the value of a correct answer. On the answer sheet fill your ID (DNI, NIE or passport) and exam permutation. "
 
-headings["spanish"]["language"]="spanish"
-headings["catalan"]["language"]="catalan"
-headings["english"]["language"]="english"
+StandardHeadings[SPA]["StudentID"]="DNI"
+StandardHeadings[CAT]["StudentID"]="DNI"
+StandardHeadings[ENG]["StudentID"]="ID"
 
-headings["spanish"]["student_id"]="DNI"
-headings["catalan"]["student_id"]="DNI"
-headings["english"]["student_id"]="ID"
+StandardHeadings[SPA]["StudentName"]="Nombre"
+StandardHeadings[CAT]["StudentName"]="Nom"
+StandardHeadings[ENG]["StudentName"]="Name"
 
-headings["spanish"]["student_name"]="Nombre"
-headings["catalan"]["student_name"]="Nom"
-headings["english"]["student_name"]="Name"
+StandardHeadings[SPA]["PermutationName"]="Permutación"
+StandardHeadings[CAT]["PermutationName"]="Permutació"
+StandardHeadings[ENG]["PermutationName"]="Permutation"
 
-headings["spanish"]["permutation_name"]="Permutación"
-headings["catalan"]["permutation_name"]="Permutació"
-headings["english"]["permutation_name"]="Permutation"
+StandardHeadings[SPA]["PermutationNum"]="1"
+StandardHeadings[CAT]["PermutationNum"]="1"
+StandardHeadings[ENG]["PermutationNum"]="1"
 
-headings["spanish"]["permutation_num"]="1"
-headings["catalan"]["permutation_num"]="1"
-headings["english"]["permutation_num"]="1"
+StandardHeadings[SPA]["ProblemName"]="Problema"
+StandardHeadings[CAT]["ProblemName"]="Problema"
+StandardHeadings[ENG]["ProblemName"]="Problem"
+
+abstract type FormatFigure end
+struct FloatingFigure <: FormatFigure
+    width::Float64
+end
+struct WrappedFigure <: FormatFigure
+    width::Float64
+    vshift::Any
+    # vshift::Unitful.Quantity{Float64,Unitful.𝐋,U} where {U}
+end
+
+abstract type ArgCombination end
+struct ALL2ALL <: ArgCombination end
+struct ONE2ONE <: ArgCombination end
+
+abstract type FormatQuestion end
+struct PrintedQuestion <: FormatQuestion
+    int_params :: Vector{Int}
+    right :: Matrix{Int64}
+end
+
+abstract type Exam end
+struct PrintedExam <: Exam
+    name::String
+    num_permutations::Int
+    languages::Vector{String}
+    headings::Dict{String,Dict{String, String}}
+    template::String
+    figures::Vector{FormatFigure}
+    functions::Vector{Function}
+    arguments::Vector{Vector{Tuple}}
+    format::FormatQuestion
+    function PrintedExam(num_permutations,languages=[ENG],headings=StandardHeadings,name="exam",template=StandardTemplate)
+        format=PrintedQuestion(Vector{Int}(undef,2),Matrix{Int64}(undef,max_questions, max_permutations))
+        format.right[:,:]=define_correct_answers(name)
+        new(name,num_permutations,languages,headings,template,Vector{FormatFigure}(undef,0),Vector{Function}(undef,0),Vector{Vector{Tuple}}(undef,0),format)
+    end
+end
+
+function add_problem!(exam::PrintedExam,fmt::FormatFigure,c::Type{<:ArgCombination},f::Function,args...)
+    push!(exam.functions,f)
+    push!(exam.figures,fmt)
+    for v in args
+        @assert isa(v,Vector) "To add a function provide its arguments as vectors (used to generate combinations)"
+    end
+    if c===ALL2ALL
+        push!(exam.arguments,collect(Iterators.take(Iterators.product(args...),exam.num_permutations)))
+    elseif c===ONE2ONE
+        push!(exam.arguments,takediag(Iterators.product(args...),exam.num_permutations))
+    end
+end
+
+function generate_pdf_files(exam::PrintedExam)
+    generate_tex_files(exam)
+    compile_tex_files(exam)
+end
+
+function generate_tex_files(exam::PrintedExam)
+
+    num_prob = length(exam.functions)
+
+    for lang in exam.languages
+        for i = 1:exam.num_permutations
+            exam.format.int_params[1] = i
+            exam.format.int_params[2] = 0
+            filename = exam.name*"_"*lang*"_$i"
+            io_tex = open(filename*".tex","w");
+            exam.headings[lang]["PermutationNum"]="$i"
+            render(io_tex,replace(exam.template,"\\end{document}"=>""),exam.headings[lang])
+            # Loop over problems
+            last_page=""
+            for k = 1:num_prob
+                # write(io_tex, begin_problem(k))
+                render(io_tex, begin_problem(k),exam.headings[lang])
+                problem_slices=exam.functions[k](exam.arguments[k][i]...,lang,exam.format)
+                # Here we need to call e.functions[k] and process figures
+                # problem = processed output de e.functions[k]
+                last_page=last_page*format_figure!(exam.figures[k],problem_slices)
+                problem=prod(problem_slices)
+                write(io_tex, problem);
+                write(io_tex, end_problem())
+            end
+            write(io_tex, last_page)
+            write(io_tex, latex_tail);
+            close(io_tex);
+        end
+    end
+    np=exam.format.int_params[1]
+    nq=exam.format.int_params[2]
+    CSV.write("results_examio.csv", Tables.table(hcat(examio_head1[1:np],examio_head2[1:np],right_names[transpose(exam.format.right[1:nq,1:np])])), header=false, delim=";")
+
+    return nothing
+
+end
+
+function compile_tex_files(exam::PrintedExam)
+
+    for lang in exam.languages
+        for i = 1:exam.num_permutations
+            filename = exam.name*"_"*lang*"_$i"
+            pdflatex = `lualatex $(filename)`
+            run(pdflatex)
+            run(pdflatex)
+            rm(filename*".aux")
+            rm(filename*".log")
+            rm(filename*".out")
+        end
+    end
+    return nothing
+
+end
 
 function takediag(prod::Iterators.ProductIterator,n)
     @assert length(prod)>=n^2
@@ -153,96 +273,62 @@ function takediag(prod::Iterators.ProductIterator,n)
     return vars
 end
 
-function set_prefix(name)
-    global prefix
-    prefix = name
-end
-function set_language(lang)
-    global language
-    language = lang
-end
-
-function define_correct_answers()
-    global right
-    if isfile("results.csv")
-        df = CSV.read("results.csv", DataFrame, header=0)
+function define_correct_answers(name::String)
+    # global right
+    filename=name*"_results.csv"
+    if isfile(filename)
+        df = CSV.read(filename, DataFrame, header=0)
         right = Matrix{Int}(df)
     else
         right = rand((1:5), max_questions, max_permutations)
-        CSV.write("results.csv", Tables.table(right), writeheader=false)
+        CSV.write(filename, Tables.table(right), writeheader=false)
     end
+    return right
 end
 
-function generate_permutations(all_args, sols)
+function figure(name, label="", caption="")
+    figure = """
+    \\centering
+    \\includegraphics[width]{$name}
+    """
+    (label   > "")  && ( figure = figure*"\\label{$label} \n" )
+    (caption > "")  && ( figure = figure*"\\caption{$caption} \n" )
+    return figure
+end
 
-    define_correct_answers()
+function format_figure!(format::WrappedFigure,str::Vector{String})
+    
+    @assert length(str)>0 "Empty string vector in format_figure!(WrappedFigure,...)"
 
-    # all_args is tuple of arrays{tuple}
-    @assert length(sols) == length(all_args)
-    num_perm = size(all_args[1], 1) # size of the first array
-    num_prob = length(all_args)
-    filename = prefix*"_"*language
+    w=format.width
+    v=format.vshift
 
-    # Loop on permutations
-    for i = 1:num_perm
-        global num_permutation, num_question
-        num_permutation = i
-        num_question = 0
-
-        filename = prefix*"_"*language*"_$i"
-        io_tex = open(filename*".tex","w");
-        headings[language]["permutation_num"]="$i"
-        render(io_tex,latex_head,headings[language])
-
-        # Loop over problems
-        for k = 1:num_prob
-            args = all_args[k] # k-th array
-            p = args[i] # ith problem
-            q = Vector{String}(undef, size(p, 1));
-            for j = 1:size(p, 1)
-                q[j] = var2latex(p[j])
-            end
-            write(io_tex, begin_problem(k))
-            problem = sols[k](p, q)
-            write(io_tex, problem);
-            write(io_tex, end_problem())
+    t=str[1]
+    for (i,s) in enumerate(str)
+        if occursin("includegraphics",s) 
+            str[1]=replace(s,"width"=>"width=$w\\textwidth")
+            str[i]=t
+            break
         end
-        write(io_tex, latex_tail);
-        close(io_tex);
-        pdflatex = `lualatex $(filename)`
-        run(pdflatex)
-        run(pdflatex)
-        rm(filename*".aux")
-        rm(filename*".log")
-        rm(filename*".out")
     end
 
-    CSV.write("results_examio.csv", Tables.table(hcat(examio_head1[1:num_perm],examio_head2[1:num_perm],right_names[transpose(right[1:num_question,1:num_perm])])), header=false, delim=";")
-
-    return nothing
-
+    str[1]="\\begin{wrapfigure}{r}{$w\\textwidth}\n\\vspace{$v}\n"*str[1]*"\\end{wrapfigure}\n"
+    return "\n"
 end
 
-function printfig_wrapped(width, label, caption, name; vshift=0.0)
-    figure = """
-    \\begin{wrapfigure}{r}{$width\\textwidth}
-    \\vspace{-$vshift cm}
-    \\centering
-    \\includegraphics[width=$width\\textwidth]{$name}
-    \\end{wrapfigure}
-    """
-    return figure
-end
-function printfig(width, label, caption, name)
-    figure = """
-    \\begin{figure}[h!]
-    \\centering
-    \\includegraphics[width=$width\\textwidth]{$name}
-    \\end{figure}
+function format_figure!(format::FloatingFigure,str::Vector{String})
 
-    """
-    return figure
+    @assert length(str)>0 "Empty string vector in format_figure!(FloatingFigure,...)"
+    w=format.width
+    for (i,s) in enumerate(str)
+        if occursin("includegraphics",s) 
+            str[i]="\n\\begin{figure}[h!]\n"*replace(s,"width"=>"width=$w\\textwidth")*"\\end{figure}\n\n"
+            break
+        end
+    end
+    return "\n"
 end
+
 function begin_quiz(name)
     str = "\\begin{quiz}{Probs/$language/$name}\n"
     return str
@@ -253,13 +339,7 @@ function begin_cloze(name)
 end
 
 function begin_problem(prob)
-    if language == "spanish" 
-        str = "\n \\noindent \\textbf{Problema $prob} \n\n"
-    elseif language == "catalan"
-      str = "\n \\noindent \\textbf{Problema $prob} \n\n"
-    elseif language == "english"
-      str = "\n \\noindent \\textbf{Problem $prob} \n\n "
-    end
+    str = "\n\\noindent \\textbf{ {{{ProblemName}}} $prob} \n\n"
     return str
 end
 function end_problem()
@@ -338,7 +418,7 @@ function rand2()
     end
 end
 
-function quest2latex(msg, var, unitname=""; factor1=rand2(), factor2=1.2 + 0.2 * rand(), factor3=0.6 + 0.2 * rand(), factor4=1.6 + 0.2 * rand(),num_digits=4)
+function question(format::PrintedQuestion, msg, var, unitname=""; factor1=rand2(), factor2=1.2 + 0.2 * rand(), factor3=0.6 + 0.2 * rand(), factor4=1.6 + 0.2 * rand(),num_digits=4)
 
     # Unit
     if unitname > "" # write it as given and pick the value parsing it
@@ -361,9 +441,9 @@ function quest2latex(msg, var, unitname=""; factor1=rand2(), factor2=1.2 + 0.2 *
     val3 = round(factor3 * val, sigdigits=num_digits); # 0.0 
     val4 = round(factor4 * val, sigdigits=num_digits); # 0.0 
 
-    global num_question,num_permutation
-    num_question = num_question + 1
-    pos = right[num_question,num_permutation]
+    format.int_params[2]=format.int_params[2]+1
+    num_question = format.int_params[2]
+    pos = format.right[format.int_params[2],format.int_params[1]]
     res = Array{String}(undef,5);
     #res = zeros(5);
     res[mod(pos, 5) + 1] = val2latex(val1)
