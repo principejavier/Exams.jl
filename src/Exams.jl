@@ -2,7 +2,9 @@ module Exams
 
 using CSV
 using DataFrames
-using Mustache
+import Mustache: render
+import Latexify: latexify
+import StatsBase: sample
 using Unitful
 import Unitful:
     rad, °,        # Angles
@@ -26,6 +28,8 @@ const rpm = minute^-1
 const h = hr
 const gal = 231inch^3
 
+export latexify
+
 export StandardTemplate
 export StandardHeadings
 export PrintedExam
@@ -39,12 +43,12 @@ export question
 export figure
 export FloatingFigure
 export WrappedFigure
+export NoFigure
 export ALL2ALL
 export ONE2ONE
 export SPA
 export CAT
 export ENG
-
 
 export rad, °,        # Angles
     s, minute, hr, Hz, # Time and frequency
@@ -160,6 +164,7 @@ struct WrappedFigure <: FormatFigure
     vshift::Any
     # vshift::Unitful.Quantity{Float64,Unitful.𝐋,U} where {U}
 end
+struct NoFigure<:FormatFigure end
 
 abstract type ArgCombination end
 struct ALL2ALL <: ArgCombination end
@@ -195,10 +200,16 @@ function add_problem!(exam::PrintedExam,fmt::FormatFigure,c::Type{<:ArgCombinati
     for v in args
         @assert isa(v,Vector) "To add a function provide its arguments as vectors (used to generate combinations)"
     end
-    if c===ALL2ALL
-        push!(exam.arguments,collect(Iterators.take(Iterators.product(args...),exam.num_permutations)))
-    elseif c===ONE2ONE
-        push!(exam.arguments,takediag(Iterators.product(args...),exam.num_permutations))
+    if length(args)==0 # function without args
+        push!(exam.arguments,[() for i in 1:exam.num_permutations])
+    else
+        if c===ALL2ALL
+            @assert length(Iterators.product(args...))>=exam.num_permutations "Not enough arguments for problem $f"
+            push!(exam.arguments,collect(Iterators.take(Iterators.product(args...),exam.num_permutations)))
+        elseif c===ONE2ONE
+            @assert length(Iterators.product(args...))>=exam.num_permutations^2 "Not enough arguments for problem $f"
+            push!(exam.arguments,takediag(Iterators.product(args...),exam.num_permutations))
+        end
     end
 end
 
@@ -326,6 +337,11 @@ function format_figure!(format::FloatingFigure,str::Vector{String})
             break
         end
     end
+    return "\n"
+end
+
+function format_figure!(format::NoFigure,str::Vector{String})
+    @assert length(str)>0 "Empty string vector in format_figure!(NoFigure,...)"
     return "\n"
 end
 
@@ -467,5 +483,30 @@ function question(format::PrintedQuestion, msg, var, unitname=""; factor1=rand2(
     return str
 
 end
+
+function question(format::PrintedQuestion, msg, eqs::Vector{String})
+
+    format.int_params[2]=format.int_params[2]+1
+    num_question = format.int_params[2]
+    pos = format.right[format.int_params[2],format.int_params[1]]
+    res = Vector{String}(undef,5);
+    perm=sample(2:5, 4, replace = false)
+    res[mod(pos    , 5) + 1] = eqs[perm[1]]
+    res[mod(pos + 1, 5) + 1] = eqs[perm[2]]
+    res[mod(pos + 2, 5) + 1] = eqs[perm[3]]
+    res[mod(pos + 3, 5) + 1] = eqs[perm[4]]
+    res[mod(pos + 4, 5) + 1] = eqs[1] # same as res[pos] = eqs[1]
+
+    str = """\\textbf{$num_question} $msg \\\\
+    \\begin{tabular}{*{5}{p{0.18\\textwidth}}}
+    a) $(res[1]) & b) $(res[2]) & c) $(res[3]) & d) $(res[4]) & e) $(res[5]) \\\\
+    \\end{tabular}
+
+    """
+    return str
+
+end
+
+
 
 end
