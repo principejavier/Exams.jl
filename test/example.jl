@@ -20,7 +20,8 @@ function generate_exam(nump)
     headings[CAT]["GraphicsPath"] = "{../assets/}"
     headings[ENG]["GraphicsPath"] = "{../assets/}"
 
-    exam = PrintedExam(nump,[SPA],headings)
+    #exam = PrintedExam(nump,languages=[SPA],headings=headings)
+    exam = PrintedExam(nump,languages=[SPA],headings=headings,format=Format([1,1,1,1,1,2]))
 
     mass=[1kg,2kg];
     h0=[1m,2m];

@@ -41,6 +41,7 @@ export compile_tex_files
 export var2latex
 export question
 export figure
+export Format
 export FloatingFigure
 export WrappedFigure
 export NoFigure
@@ -120,8 +121,8 @@ const CAT="catalan"
 const ENG="english"
 const SPA="spanish"
 
-max_questions = 50
-max_permutations = 10
+default_max_questions = 50 # can be changed from API
+default_max_permutations = 10 # can be changed from API
 right_names = ["A","B","C","D","E"]
 examio_head1 = ["1","2","3","4","5","6","7","8","9","10"]  # permutacio
 examio_head2 = ["1","1","1","1","1","1","1","1","1","1"]  # grup
@@ -172,14 +173,28 @@ struct ONE2ONE <: ArgCombination end
 
 abstract type FormatQuestion end
 struct PrintedQuestion <: FormatQuestion
-    int_params :: Vector{Int}
-    right :: Matrix{Int64}
+    num_options :: Vector{Int}
+    num_rows    :: Vector{Int}
+    int_params  :: Vector{Int}
+    right       :: Matrix{Int64}
+end
+
+const PrintedExamType=1::Int
+const MoodleExamType=2::Int
+struct Format
+    num_rows    :: Vector{Int}
+    num_options :: Vector{Int}
+    function Format(num_rows=[1 for i in 1:default_max_questions],num_options=[5 for i in 1:default_max_questions])
+        new(num_rows,num_options)
+    end
 end
 
 abstract type Exam end
 struct PrintedExam <: Exam
     name::String
     num_permutations::Int
+    max_permutations::Int
+    max_questions::Int
     languages::Vector{String}
     headings::Dict{String,Dict{String, String}}
     template::String
@@ -187,10 +202,10 @@ struct PrintedExam <: Exam
     functions::Vector{Function}
     arguments::Vector{Vector{Tuple}}
     format::FormatQuestion
-    function PrintedExam(num_permutations,languages=[ENG],headings=StandardHeadings,name="exam",template=StandardTemplate)
-        format=PrintedQuestion(Vector{Int}(undef,2),Matrix{Int64}(undef,max_questions, max_permutations))
-        format.right[:,:]=define_correct_answers(name)
-        new(name,num_permutations,languages,headings,template,Vector{FormatFigure}(undef,0),Vector{Function}(undef,0),Vector{Vector{Tuple}}(undef,0),format)
+    function PrintedExam(num_permutations;languages=[ENG],headings=StandardHeadings,name="exam",max_permutations=default_max_permutations,max_questions=default_max_questions,template=StandardTemplate,format=Format([1 for i in 1:max_questions],[5 for i in 1:max_questions]))
+        form=PrintedQuestion(format.num_options,format.num_rows,Vector{Int}(undef,2),Matrix{Int64}(undef,max_questions, max_permutations))
+        # format.right[:,:]=define_correct_answers(name)
+        new(name,num_permutations,max_permutations,max_questions,languages,headings,template,Vector{FormatFigure}(undef,0),Vector{Function}(undef,0),Vector{Vector{Tuple}}(undef,0),form)
     end
 end
 
@@ -220,6 +235,7 @@ end
 
 function generate_tex_files(exam::PrintedExam)
 
+    define_correct_answers!(exam)
     num_prob = length(exam.functions)
 
     for lang in exam.languages
@@ -284,18 +300,31 @@ function takediag(prod::Iterators.ProductIterator,n)
     return vars
 end
 
-function define_correct_answers(name::String)
+function define_correct_answers!(exam::PrintedExam)
     # global right
-    filename=name*"_results.csv"
+    filename=exam.name*"_results.csv"
     if isfile(filename)
         df = CSV.read(filename, DataFrame, header=0)
-        right = Matrix{Int}(df)
+        exam.format.right[:,:] = Matrix{Int}(df)
     else
-        right = rand((1:5), max_questions, max_permutations)
-        CSV.write(filename, Tables.table(right), writeheader=false)
+        exam.format.right[:,:] = rand((1:5), exam.max_questions, exam.max_permutations)
+        CSV.write(filename, Tables.table(exam.format.right), writeheader=false)
     end
-    return right
+    return nothing
 end
+
+# function define_correct_answers(name::String)
+#     # global right
+#     filename=name*"_results.csv"
+#     if isfile(filename)
+#         df = CSV.read(filename, DataFrame, header=0)
+#         right = Matrix{Int}(df)
+#     else
+#         right = rand((1:5), max_questions, max_permutations)
+#         CSV.write(filename, Tables.table(right), writeheader=false)
+#     end
+#     return right
+# end
 
 function figure(name, label="", caption="")
     figure = """
@@ -497,12 +526,24 @@ function question(format::PrintedQuestion, msg, eqs::Vector{String})
     res[mod(pos + 3, 5) + 1] = eqs[perm[4]]
     res[mod(pos + 4, 5) + 1] = eqs[1] # same as res[pos] = eqs[1]
 
-    str = """\\textbf{$num_question} $msg \\\\
-    \\begin{tabular}{*{5}{p{0.18\\textwidth}}}
-    a) $(res[1]) & b) $(res[2]) & c) $(res[3]) & d) $(res[4]) & e) $(res[5]) \\\\
-    \\end{tabular}
+    str=""
+    if format.num_rows[num_question]==1
+        str = """\\textbf{$num_question} $msg \\\\
+        \\begin{tabular}{*{5}{p{0.18\\textwidth}}}
+        a) $(res[1]) & b) $(res[2]) & c) $(res[3]) & d) $(res[4]) & e) $(res[5]) \\\\
+        \\end{tabular}
 
     """
+    elseif format.num_rows[num_question]==2
+        str = """\\textbf{$num_question} $msg \\\\
+        \\begin{tabular}{*{3}{p{0.18\\textwidth}}}
+        a) $(res[1]) & b) $(res[2]) & c) $(res[3]) \\\\ 
+        d) $(res[4]) & e) $(res[5]) & \\\\
+        \\end{tabular}
+    
+        """
+    end
+
     return str
 
 end
