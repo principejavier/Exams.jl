@@ -15,6 +15,7 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 CSV = "0.10"
 DataFrames = "1"
 Mustache = "1"
+StatsBase = "0.33"
 Unitful = "1"
 julia = "1.7.2"
 
