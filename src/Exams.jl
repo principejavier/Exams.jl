@@ -38,7 +38,7 @@ export generate_pdf_files
 export generate_tex_files
 export compile_tex_files
 
-export var2latex
+export var2out
 export question
 export figure
 export Format
@@ -409,7 +409,7 @@ function val2latex(val)
     return str
 end
 
-function var2latex(var, varname="", unitname=""; num_digits=4)
+function var2out(var, varname="", unitname=""; num_digits=4)
 
     if dimension(var) == NoDims # unit(var) == unit(1) 
         varval = val2latex(var)

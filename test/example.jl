@@ -41,11 +41,11 @@ end
 
 function free_fall(mass,h0,v0,language=MUTE,format=Unformatted)
 
-    mass_out=var2latex(mass)
-    h0_out=var2latex(h0)
-    v0_out=var2latex(v0)
+    mass_out=var2out(mass)
+    h0_out=var2out(h0)
+    v0_out=var2out(v0)
     g=9.81m/s^2
-    g_out=var2latex(g,"m/s^2")
+    g_out=var2out(g,"m/s^2")
 
     #h=h0+v0*t-0.5*g*t^2
     t=2*v0/g+sqrt(v0^2+2*g*h0)/g
@@ -70,10 +70,10 @@ end
 
 function inclined_plane(mass,α,language=MUTE,format=Unformatted)
 
-    mass_out=var2latex(mass)
-    α_out=var2latex(α,"\\alpha","°")
+    mass_out=var2out(mass)
+    α_out=var2out(α,"\\alpha","°")
     g=9.81m/s^2
-    g_out=var2latex(g,"m/s^2")
+    g_out=var2out(g,"m/s^2")
 
     Fx=mass*g*sin(α)
     Fy=mass*g*cos(α)
