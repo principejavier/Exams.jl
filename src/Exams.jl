@@ -45,11 +45,13 @@ export Format
 export FloatingFigure
 export WrappedFigure
 export NoFigure
+export Unformatted
 export ALL2ALL
 export ONE2ONE
 export SPA
 export CAT
 export ENG
+export MUTE
 
 export rad, °,        # Angles
     s, minute, hr, Hz, # Time and frequency
