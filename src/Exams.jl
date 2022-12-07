@@ -464,7 +464,7 @@ function rand2()
     end
 end
 
-function question(format::Unformatted, msg, var, unitname=""; factor1=rand2(), factor2=1.2 + 0.2 * rand(), factor3=0.6 + 0.2 * rand(), factor4=1.6 + 0.2 * rand(),num_digits=4)
+function question(::Type{Unformatted}, msg, var, unitname=""; factor1=rand2(), factor2=1.2 + 0.2 * rand(), factor3=0.6 + 0.2 * rand(), factor4=1.6 + 0.2 * rand(),num_digits=4)
 
     # Next lines are in common with other methods, could be wrapped into
     # another function
@@ -482,7 +482,7 @@ function question(format::Unformatted, msg, var, unitname=""; factor1=rand2(), f
     res = val2latex(val)
 
     msg = replace(msg, "unitname" => latex_unit)
-    println(msg*" result: $res")
+    println(msg*" Result: $res")
 
 end
 
