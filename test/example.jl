@@ -39,7 +39,7 @@ function generate_exam(nump)
     return nothing
 end
 
-function free_fall(mass,h0,v0,language=undef,format=undef)
+function free_fall(mass,h0,v0,language=MUTE,format=Unformatted)
 
     mass_out=var2latex(mass)
     h0_out=var2latex(h0)
@@ -68,7 +68,7 @@ function free_fall(mass,h0,v0,language=undef,format=undef)
 
 end
 
-function inclined_plane(mass,α,language=undef,format=undef)
+function inclined_plane(mass,α,language=MUTE,format=Unformatted)
 
     mass_out=var2latex(mass)
     α_out=var2latex(α,"\\alpha","°")
@@ -101,23 +101,24 @@ function inclined_plane(mass,α,language=undef,format=undef)
 
 end
 
-function theory_questions(language=undef,format=undef)
+function theory_questions(language=MUTE,format=Unformatted)
 
     eq = Vector{String}(undef,5);
-    eq[1]=latexify("F=m*a")    # this the correct one, it will be shuffled when generating permutations
-    eq[2]=latexify("F=m*a^2")
-    eq[3]=latexify("F=m*g")
-    eq[4]=latexify("F=m/a")
-    eq[5]=latexify("F=m^2*a")
+    eq[1]="F=m*a"    # this the correct one, it will be shuffled when generating permutations
+    eq[2]="F=m*a^2"
+    eq[3]="F=m*g"
+    eq[4]="F=m/a"
+    eq[5]="F=m^2*a"
 
     if language==SPA 
         statement = "Teoría de la mecánica clásica.\n\n"
         question1=question(format,"La ley de Newton se puede escribir como:",eq)
     elseif language==CAT
+        statement = "Teoria de la mecànica clàssica.\n\n"
+        question1=question(format,"La llei de Newton es pot escriure com:",eq)
     elseif language==ENG
         statement = "Theory of classical mechanics.\n\n"
         question1=question(format,"The Newton law can be written as,",eq)
-    else
     end
     return [statement,question1]
 

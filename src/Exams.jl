@@ -120,6 +120,7 @@ const latex_tail = "\n\\end{document}\n"
 const CAT="catalan"
 const ENG="english"
 const SPA="spanish"
+const MUTE="mute"
 
 default_max_questions = 50 # can be changed from API
 default_max_permutations = 10 # can be changed from API
@@ -178,6 +179,7 @@ struct PrintedQuestion <: FormatQuestion
     int_params  :: Vector{Int}
     right       :: Matrix{Int64}
 end
+struct Unformatted <: FormatQuestion end
 
 const PrintedExamType=1::Int
 const MoodleExamType=2::Int
@@ -249,11 +251,8 @@ function generate_tex_files(exam::PrintedExam)
             # Loop over problems
             last_page=""
             for k = 1:num_prob
-                # write(io_tex, begin_problem(k))
                 render(io_tex, begin_problem(k),exam.headings[lang])
                 problem_slices=exam.functions[k](exam.arguments[k][i]...,lang,exam.format)
-                # Here we need to call e.functions[k] and process figures
-                # problem = processed output de e.functions[k]
                 last_page=last_page*format_figure!(exam.figures[k],problem_slices)
                 problem=prod(problem_slices)
                 write(io_tex, problem);
@@ -519,12 +518,12 @@ function question(format::PrintedQuestion, msg, eqs::Vector{String})
     num_question = format.int_params[2]
     pos = format.right[format.int_params[2],format.int_params[1]]
     res = Vector{String}(undef,5);
-    perm=sample(2:5, 4, replace = false)
-    res[mod(pos    , 5) + 1] = eqs[perm[1]]
-    res[mod(pos + 1, 5) + 1] = eqs[perm[2]]
-    res[mod(pos + 2, 5) + 1] = eqs[perm[3]]
-    res[mod(pos + 3, 5) + 1] = eqs[perm[4]]
-    res[mod(pos + 4, 5) + 1] = eqs[1] # same as res[pos] = eqs[1]
+    perm = sample(2:5, 4, replace = false)
+    res[mod(pos    , 5) + 1] = latexify(eqs[perm[1]])
+    res[mod(pos + 1, 5) + 1] = latexify(eqs[perm[2]])
+    res[mod(pos + 2, 5) + 1] = latexify(eqs[perm[3]])
+    res[mod(pos + 3, 5) + 1] = latexify(eqs[perm[4]])
+    res[mod(pos + 4, 5) + 1] = latexify(eqs[1]) # same as res[pos] = eqs[1]
 
     str=""
     if format.num_rows[num_question]==1
