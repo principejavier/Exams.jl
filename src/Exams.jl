@@ -464,6 +464,28 @@ function rand2()
     end
 end
 
+function question(format::Unformatted, msg, var, unitname=""; factor1=rand2(), factor2=1.2 + 0.2 * rand(), factor3=0.6 + 0.2 * rand(), factor4=1.6 + 0.2 * rand(),num_digits=4)
+
+    # Next lines are in common with other methods, could be wrapped into
+    # another function
+    if unitname > "" # write it as given and pick the value parsing it
+        latex_unit = unit2latex(unitname)
+        out_unit   = eval(Meta.parse(unitname))
+    else # pick the unit from the variable
+        out_unit   = unit(var)
+        unitname   = string(out_unit)
+        latex_unit = unit2latex(unitname)
+    end
+   
+    val = ustrip(Float64, out_unit, var)
+    val = round(val, sigdigits=num_digits)
+    res = val2latex(val)
+
+    msg = replace(msg, "unitname" => latex_unit)
+    println(msg*" result: $res")
+
+end
+
 function question(format::PrintedQuestion, msg, var, unitname=""; factor1=rand2(), factor2=1.2 + 0.2 * rand(), factor3=0.6 + 0.2 * rand(), factor4=1.6 + 0.2 * rand(),num_digits=4)
 
     # Unit
