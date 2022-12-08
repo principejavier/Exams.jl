@@ -385,7 +385,7 @@ function begin_cloze(name)
 end
 
 function begin_problem(prob)
-    str = "\n\\noindent \\textbf{ {{{ProblemName}}} $prob} \n\n"
+    str = "\n\\noindent {\\bfseries {{{ProblemName}}} $prob} \n\n"
     return str
 end
 function end_problem()
