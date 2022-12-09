@@ -332,8 +332,8 @@ function figure(name, label="", caption="")
     \\centering
     \\includegraphics[width]{$name}
     """
-    (label   > "")  && ( figure = figure*"\\label{$label} \n" )
     (caption > "")  && ( figure = figure*"\\caption{$caption} \n" )
+    (label   > "")  && ( figure = figure*"\\label{$label} \n" )
     return figure
 end
 
