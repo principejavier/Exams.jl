@@ -36,6 +36,7 @@ export StandardHeadings
 export PrintedExam
 export add_problem!
 export add_pagebreak!
+export add_vspace!
 export generate_pdf_files
 export generate_tex_files
 export compile_tex_files
@@ -168,8 +169,12 @@ struct FloatingFigure <: FormatFigure
 end
 struct WrappedFigure <: FormatFigure
     width::Float64
-    vshift::Any
-    # vshift::Unitful.Quantity{Float64,Unitful.𝐋,U} where {U}
+    #vshift::Any
+    vshift::Unitful.Quantity{T,Unitful.𝐋,U} where {T<:Real,U<:Unitful.Units}
+    function WrappedFigure(w,v::Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}=0.0cm) 
+        # @assert isa(v,Unitful.Length) "vshift must be given with length units"
+        new(w,v)
+    end
 end
 struct NoFigure<:FormatFigure end
 
@@ -208,18 +213,20 @@ struct PrintedExam <: Exam
     figures::Vector{FormatFigure}
     functions::Vector{Function}
     arguments::Vector{Vector{Tuple}}
+    vspace::Vector{Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}}
     pagebreak::Vector{Bool}
     format::FormatQuestion
     function PrintedExam(num_permutations;languages=[ENG],headings=StandardHeadings,name="exam",max_permutations=default_max_permutations,max_questions=default_max_questions,template=StandardTemplate,format=Format([1 for i in 1:max_questions],[5 for i in 1:max_questions]))
         form=PrintedQuestion(format.num_options,format.num_rows,Vector{Int}(undef,2),Matrix{Int64}(undef,max_questions, max_permutations))
         # format.right[:,:]=define_correct_answers(name)
-        new(name,num_permutations,max_permutations,max_questions,languages,headings,template,Vector{FormatFigure}(undef,0),Vector{Function}(undef,0),Vector{Vector{Tuple}}(undef,0),Vector{Bool}(undef,0),form)
+        new(name,num_permutations,max_permutations,max_questions,languages,headings,template,Vector{FormatFigure}(undef,0),Vector{Function}(undef,0),Vector{Vector{Tuple}}(undef,0),Vector{Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}}(undef,0),Vector{Bool}(undef,0),form)
     end
 end
 
 function add_problem!(exam::PrintedExam,fmt::FormatFigure,c::Type{<:ArgCombination},f::Function,args...)
     push!(exam.functions,f)
     push!(exam.figures,fmt)
+    push!(exam.vspace,0.0cm)
     push!(exam.pagebreak,false)
     for v in args
         @assert isa(v,Vector) "To add a function provide its arguments as vectors (used to generate combinations)"
@@ -239,6 +246,9 @@ end
 
 function add_pagebreak!(exam::PrintedExam)
     exam.pagebreak[end]=true
+end
+function add_vspace!(exam::PrintedExam,s::Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units})
+    exam.vspace[end]=s
 end
 
 function generate_pdf_files(exam::PrintedExam)
@@ -268,6 +278,7 @@ function generate_tex_files(exam::PrintedExam)
                 problem=prod(problem_slices)
                 write(io_tex, problem);
                 write(io_tex, end_problem())
+                write(io_tex,vspace(exam.vspace[k]))
                 exam.pagebreak[k] && write(io_tex,pagebreak())
             end
             write(io_tex, last_page)
@@ -352,7 +363,8 @@ function format_figure!(format::WrappedFigure,str::Vector{String})
     @assert length(str)>0 "Empty string vector in format_figure!(WrappedFigure,...)"
 
     w=format.width
-    v=format.vshift
+    t=format.vshift
+    v=replace("$t",r"\s"=>"")
 
     t=str[1]
     for (i,s) in enumerate(str)
@@ -404,6 +416,11 @@ function end_problem()
 end
 function pagebreak()
     str="\\pagebreak \n"
+    return str
+end
+function vspace(s)
+    t=replace("$s",r"\s"=>"")
+    str="\\vspace{$t} \n"
     return str
 end
 

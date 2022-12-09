@@ -28,6 +28,8 @@ function generate_exam(nump)
     v0=[1m/s,2m/s];
     add_problem!(exam,WrappedFigure(0.25,-5mm),ALL2ALL,free_fall,mass,h0,v0)
 
+    add_vspace!(exam,5cm)
+
     mass=[1kg,2kg];
     α=[40°,50°]
     add_problem!(exam,NoFigure(),ALL2ALL,inclined_plane,mass,α)
