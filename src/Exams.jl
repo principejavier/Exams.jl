@@ -7,6 +7,7 @@ import Latexify: latexify
 import StatsBase: sample
 using Unitful
 import Unitful:
+    uconvert,      # Needed for explicit conversion (degrees)
     rad, °,        # Angles
     s, minute, hr, Hz, # Time and frequency
     mm, cm, m, km, # Length
@@ -53,7 +54,8 @@ export CAT
 export ENG
 export MUTE
 
-export rad, °,        # Angles
+export uconvert,
+    rad, °,        # Angles
     s, minute, hr, Hz, # Time and frequency
     mm, cm, m, km, # Length
     inch, ft,      # Imperial units of length
