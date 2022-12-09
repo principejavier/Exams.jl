@@ -35,6 +35,7 @@ export StandardTemplate
 export StandardHeadings
 export PrintedExam
 export add_problem!
+export add_pagebreak!
 export generate_pdf_files
 export generate_tex_files
 export compile_tex_files
@@ -207,17 +208,19 @@ struct PrintedExam <: Exam
     figures::Vector{FormatFigure}
     functions::Vector{Function}
     arguments::Vector{Vector{Tuple}}
+    pagebreak::Vector{Bool}
     format::FormatQuestion
     function PrintedExam(num_permutations;languages=[ENG],headings=StandardHeadings,name="exam",max_permutations=default_max_permutations,max_questions=default_max_questions,template=StandardTemplate,format=Format([1 for i in 1:max_questions],[5 for i in 1:max_questions]))
         form=PrintedQuestion(format.num_options,format.num_rows,Vector{Int}(undef,2),Matrix{Int64}(undef,max_questions, max_permutations))
         # format.right[:,:]=define_correct_answers(name)
-        new(name,num_permutations,max_permutations,max_questions,languages,headings,template,Vector{FormatFigure}(undef,0),Vector{Function}(undef,0),Vector{Vector{Tuple}}(undef,0),form)
+        new(name,num_permutations,max_permutations,max_questions,languages,headings,template,Vector{FormatFigure}(undef,0),Vector{Function}(undef,0),Vector{Vector{Tuple}}(undef,0),Vector{Bool}(undef,0),form)
     end
 end
 
 function add_problem!(exam::PrintedExam,fmt::FormatFigure,c::Type{<:ArgCombination},f::Function,args...)
     push!(exam.functions,f)
     push!(exam.figures,fmt)
+    push!(exam.pagebreak,false)
     for v in args
         @assert isa(v,Vector) "To add a function provide its arguments as vectors (used to generate combinations)"
     end
@@ -232,6 +235,10 @@ function add_problem!(exam::PrintedExam,fmt::FormatFigure,c::Type{<:ArgCombinati
             push!(exam.arguments,takediag(Iterators.product(args...),exam.num_permutations))
         end
     end
+end
+
+function add_pagebreak!(exam::PrintedExam)
+    exam.pagebreak[end]=true
 end
 
 function generate_pdf_files(exam::PrintedExam)
@@ -261,6 +268,7 @@ function generate_tex_files(exam::PrintedExam)
                 problem=prod(problem_slices)
                 write(io_tex, problem);
                 write(io_tex, end_problem())
+                exam.pagebreak[k] && write(io_tex,pagebreak())
             end
             write(io_tex, last_page)
             write(io_tex, latex_tail);
@@ -391,7 +399,11 @@ function begin_problem(prob)
     return str
 end
 function end_problem()
-    str = "\n "
+    str = "\n \n"
+    return str
+end
+function pagebreak()
+    str="\\pagebreak \n"
     return str
 end
 

@@ -30,7 +30,9 @@ function generate_exam(nump)
 
     mass=[1kg,2kg];
     α=[40°,50°]
-    add_problem!(exam,FloatingFigure(0.3),ALL2ALL,inclined_plane,mass,α)
+    add_problem!(exam,NoFigure(),ALL2ALL,inclined_plane,mass,α)
+
+    add_pagebreak!(exam)
 
     add_problem!(exam,NoFigure(),ALL2ALL,theory_questions)
 
