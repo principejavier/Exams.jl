@@ -93,7 +93,7 @@ const StandardTemplate="""
 \\renewcommand{\\tablename}{Tabla}
 \\linespread{1.3}
 \\parindent 0mm
-\\parskip 3mm
+\\parskip 2mm
 \\textfloatsep 6pt
 \\floatsep  6pt
 \\intextsep 6pt
@@ -375,7 +375,7 @@ function format_figure!(format::WrappedFigure,str::Vector{String})
         end
     end
 
-    str[1]="\\begin{wrapfigure}{r}{$w\\textwidth}\n\\vspace{$v}\n"*str[1]*"\\end{wrapfigure}\n"
+    str[1]="\n\n\\begin{wrapfigure}{r}{$w\\textwidth}\n\\vspace{$v}\n"*str[1]*"\\end{wrapfigure}\n\n"
     return "\n"
 end
 
@@ -385,7 +385,7 @@ function format_figure!(format::FloatingFigure,str::Vector{String})
     w=format.width
     for (i,s) in enumerate(str)
         if occursin("includegraphics",s) 
-            str[i]="\n\\begin{figure}[h!]\n"*replace(s,"width"=>"width=$w\\textwidth")*"\\end{figure}\n\n"
+            str[i]="\n\n\\begin{figure}[h!]\n"*replace(s,"width"=>"width=$w\\textwidth")*"\\end{figure}\n\n"
             break
         end
     end
@@ -557,7 +557,8 @@ function question(format::PrintedQuestion, msg, var, unitname=""; factor1=rand2(
     # \\end{tabular}
 
     # """
-    str = """\\textbf{$num_question} $msg \\\\
+    str = """\n
+    \\textbf{$num_question} $msg \\\\
     \\begin{tabular}{*{5}{p{2.cm}}}
     a) \$$(res[1])\$ & b) \$$(res[2])\$ & c) \$$(res[3])\$ & d) \$$(res[4])\$ & e) \$$(res[5])\$ \\\\
     \\end{tabular}
@@ -582,14 +583,16 @@ function question(format::PrintedQuestion, msg, eqs::Vector{String})
 
     str=""
     if format.num_rows[num_question]==1
-        str = """\\textbf{$num_question} $msg \\\\
+        str = """\n
+        \\textbf{$num_question} $msg \\\\
         \\begin{tabular}{*{5}{p{0.18\\textwidth}}}
         a) $(res[1]) & b) $(res[2]) & c) $(res[3]) & d) $(res[4]) & e) $(res[5]) \\\\
         \\end{tabular}
 
-    """
+        """
     elseif format.num_rows[num_question]==2
-        str = """\\textbf{$num_question} $msg \\\\
+        str = """\n        
+        \\textbf{$num_question} $msg \\\\
         \\begin{tabular}{*{3}{p{0.18\\textwidth}}}
         a) $(res[1]) & b) $(res[2]) & c) $(res[3]) \\\\ 
         d) $(res[4]) & e) $(res[5]) & \\\\
