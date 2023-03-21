@@ -1,0 +1,44 @@
+\documentclass[11pt]{article}
+\usepackage{amssymb,amsmath}
+\usepackage[utf8]{inputenc}  % handle accents in pdf, using it causes errors in xml
+\usepackage{unicode-math}    % Correctly handles unicode characters (degree) in pdf, only with lualatex
+\usepackage[catalan]{babel} % hyphentation
+\usepackage{wrapfig}
+\usepackage{graphics}
+\usepackage{pgf}
+\usepackage{tikz}
+\usepackage{hyperref}
+\usepackage[top=1.5cm,bottom=2cm,right=2cm,left=2cm]{geometry}
+\usepackage{enumitem}
+\setlist[enumerate]{left=0pt,topsep=0pt,label={\bf \arabic*},resume}
+
+\renewcommand{\figurename}{Figura}
+\renewcommand{\tablename}{Tabla}
+\linespread{1.3}
+\parindent 0mm
+\parskip 3mm
+\textfloatsep 6pt
+\floatsep  6pt
+\intextsep 6pt
+\graphicspath{ {{{GraphicsPath}}} }
+
+\begin{document}
+\pagestyle{empty}
+
+\begin{table}[ht]
+  \begin{center}
+    \begin{tabular}{|l|l|l|}
+      \hline
+      {\bf {{{CourseTitle}}} } \quad &  {{{ExamTitle}}} {{{ExamDate}}} \quad \quad \quad \quad \quad & {{{PermutationName}}} {{{PermutationNum}}}  \\
+      \hline
+      {{StudentID}}: & \multicolumn{2}{|l|}{ {{StudentName}}: } \\ \hline
+      \multicolumn{3}{|l|}{
+      \begin{minipage}{\textwidth}
+      {{{ExamRules}}}
+      \end{minipage}}
+      \\ \hline
+    \end{tabular}
+  \end{center}
+\end{table}
+
+\end{document}
