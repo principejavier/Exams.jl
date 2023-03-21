@@ -31,7 +31,7 @@ const gal = 231inch^3
 
 export latexify
 
-export StandardTemplate
+# export StandardTemplate
 export StandardHeadings
 export PrintedExam
 export add_problem!
@@ -54,7 +54,7 @@ export ONE2ONE
 export SPA
 export CAT
 export ENG
-export MUTE
+#export MUTE
 
 export uconvert,
     rad, °,        # Angles
@@ -126,7 +126,7 @@ const latex_tail = "\n\\end{document}\n"
 const CAT="catalan"
 const ENG="english"
 const SPA="spanish"
-const MUTE="mute"
+# const MUTE="mute"
 
 default_max_questions = 50 # can be changed from API
 default_max_permutations = 10 # can be changed from API
@@ -162,6 +162,14 @@ StandardHeadings[ENG]["PermutationNum"]="1"
 StandardHeadings[SPA]["ProblemName"]="Problema"
 StandardHeadings[CAT]["ProblemName"]="Problema"
 StandardHeadings[ENG]["ProblemName"]="Problem"
+
+function add_defaults!(headings)
+    for (key,val) in StandardHeadings
+      if !haskey(headings,key)
+        headings[key] = val
+      end
+    end
+end
 
 abstract type FormatFigure end
 struct FloatingFigure <: FormatFigure
@@ -219,6 +227,7 @@ struct PrintedExam <: Exam
     function PrintedExam(num_permutations;languages=[ENG],headings=StandardHeadings,name="exam",max_permutations=default_max_permutations,max_questions=default_max_questions,template=StandardTemplate,format=Format([1 for i in 1:max_questions],[5 for i in 1:max_questions]))
         form=PrintedQuestion(format.num_options,format.num_rows,Vector{Int}(undef,2),Matrix{Int64}(undef,max_questions, max_permutations))
         # format.right[:,:]=define_correct_answers(name)
+        add_defaults!(headings)
         new(name,num_permutations,max_permutations,max_questions,languages,headings,template,Vector{FormatFigure}(undef,0),Vector{Function}(undef,0),Vector{Vector{Tuple}}(undef,0),Vector{Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}}(undef,0),Vector{Bool}(undef,0),form)
     end
 end

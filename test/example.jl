@@ -43,7 +43,7 @@ function generate_exam(nump)
     return nothing
 end
 
-function free_fall(mass,h0,v0,language=MUTE,format=Unformatted)
+function free_fall(mass,h0,v0,language=nothing,format=Unformatted)
 
     mass_out=var2out(mass)
     h0_out=var2out(h0)
@@ -72,7 +72,7 @@ function free_fall(mass,h0,v0,language=MUTE,format=Unformatted)
 
 end
 
-function inclined_plane(mass,α,language=MUTE,format=Unformatted)
+function inclined_plane(mass,α,language=nothing,format=Unformatted)
 
     mass_out=var2out(mass)
     α_out=var2out(α,"\\alpha","°")
@@ -105,7 +105,7 @@ function inclined_plane(mass,α,language=MUTE,format=Unformatted)
 
 end
 
-function theory_questions(language=MUTE,format=Unformatted)
+function theory_questions(language=nothing,format=Unformatted)
 
     eq = Vector{String}(undef,5);
     eq[1]="F=m*a"    # this the correct one, it will be shuffled when generating permutations
