@@ -177,11 +177,12 @@ struct FloatingFigure <: FormatFigure
 end
 struct WrappedFigure <: FormatFigure
     width::Float64
+    width_fig::Float64
     #vshift::Any
     vshift::Unitful.Quantity{T,Unitful.𝐋,U} where {T<:Real,U<:Unitful.Units}
-    function WrappedFigure(w,v::Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}=0.0cm) 
+    function WrappedFigure(w,v::Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}=v;width_fig=w)
         # @assert isa(v,Unitful.Length) "vshift must be given with length units"
-        new(w,v)
+        new(w,width_fig,v)
     end
 end
 struct NoFigure<:FormatFigure end
