@@ -31,7 +31,7 @@ const gal = 231inch^3
 
 export latexify
 
-# export StandardTemplate
+export StandardTemplate
 export StandardHeadings
 export PrintedExam
 export add_problem!
