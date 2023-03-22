@@ -377,13 +377,14 @@ function format_figure!(format::WrappedFigure,str::Vector{String})
     @assert length(str)>0 "Empty string vector in format_figure!(WrappedFigure,...)"
 
     w=format.width
+    wfig=format.width_fig
     t=format.vshift
     v=replace("$t",r"\s"=>"")
 
     t=str[1]
     for (i,s) in enumerate(str)
         if occursin("includegraphics",s) 
-            str[1]=replace(s,"width"=>"width=$w\\textwidth")
+            str[1]=replace(s,"width"=>"width=$wfig\\textwidth")
             str[i]=t
             break
         end
