@@ -26,7 +26,7 @@ function generate_exam(nump)
     mass=[1kg,2kg];
     h0=[1m,2m];
     v0=[1m/s,2m/s];
-    add_problem!(exam,WrappedFigure(0.25,-5mm),ALL2ALL,free_fall,mass,h0,v0)
+    add_problem!(exam,WrappedFigure(0.25,-5mm),ONE2ONE,free_fall,mass,h0,v0)
 
     add_vspace!(exam,5cm)
 
@@ -66,7 +66,12 @@ function free_fall(mass,h0,v0,language=nothing,format=Unformatted)
         question2 = question(format,"la velocitat que arriba a tenir al tocar a terra (en unitname),", v,"km/h");
     elseif language==ENG
     else
-        println(mass,h0,v0,P,v,t)
+        println("mass = ",mass)
+        println("h0 = ",h0)
+        println("v0 = ",v0)
+        println("v = ",v)
+        println("t = ",t)
+        return nothing
     end
     return [statement,figure1,question1,question2]
 

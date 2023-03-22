@@ -247,8 +247,12 @@ function add_problem!(exam::PrintedExam,fmt::FormatFigure,c::Type{<:ArgCombinati
             @assert length(Iterators.product(args...))>=exam.num_permutations "Not enough arguments for problem $f"
             push!(exam.arguments,collect(Iterators.take(Iterators.product(args...),exam.num_permutations)))
         elseif c===ONE2ONE
-            @assert length(Iterators.product(args...))>=exam.num_permutations^2 "Not enough arguments for problem $f"
-            push!(exam.arguments,takediag(Iterators.product(args...),exam.num_permutations))
+            # @assert length(Iterators.product(args...))>=exam.num_permutations^2 "Not enough arguments for problem $f"
+            # push!(exam.arguments,takediag(Iterators.product(args...),exam.num_permutations))
+            for (i,a) in enumerate(args)
+                @assert length(a)>=exam.num_permutations "Argument $i is not of the required size"
+            end
+            push!(exam.arguments,collect(zip(args...)))
         end
     end
 end
