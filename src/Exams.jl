@@ -29,6 +29,8 @@ const rpm = minute^-1
 const h = hr
 const gal = 231inch^3
 
+using CoolProp
+
 export latexify
 
 export StandardTemplate
@@ -73,6 +75,8 @@ export uconvert,
     Ra, °F, °C, K, # Temperature
     mW, W, kW, MW,
     rpm, h, gal
+
+export PropsSI
 
 const StandardTemplate="""
 \\documentclass[11pt]{article}
