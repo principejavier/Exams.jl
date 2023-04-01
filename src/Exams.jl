@@ -2,6 +2,8 @@ module Exams
 
 using CSV
 using DataFrames
+using FileIO
+using BSON
 import Mustache: render
 import Latexify: latexify
 import StatsBase: sample
@@ -135,8 +137,8 @@ const SPA="spanish"
 default_max_questions = 50 # can be changed from API
 default_max_permutations = 10 # can be changed from API
 right_names = ["A","B","C","D","E"]
-examio_head1 = ["1","2","3","4","5","6","7","8","9","10"]  # permutacio
-examio_head2 = ["1","1","1","1","1","1","1","1","1","1"]  # grup
+head1 = ["1","2","3","4","5","6","7","8","9","10"]  # permutacio
+head2 = ["1","1","1","1","1","1","1","1","1","1"]  # grup (not used right now)
 
 StandardHeadings = Dict{String,Dict{String, String}}()
 StandardHeadings[SPA]=Dict{String,String}()
@@ -307,7 +309,7 @@ function generate_tex_files(exam::PrintedExam)
     end
     np=exam.format.int_params[1]
     nq=exam.format.int_params[2]
-    CSV.write("results_examio.csv", Tables.table(hcat(examio_head1[1:np],examio_head2[1:np],right_names[transpose(exam.format.right[1:nq,1:np])])), header=false, delim=";")
+    CSV.write(exam.name*"_results.csv", Tables.table(hcat(head1[1:np],head2[1:np],right_names[transpose(exam.format.right[1:nq,1:np])])), header=false, delim=";")
 
     return nothing
 
@@ -342,14 +344,13 @@ function takediag(prod::Iterators.ProductIterator,n)
 end
 
 function define_correct_answers!(exam::PrintedExam)
-    # global right
-    filename=exam.name*"_results.csv"
+    filename=exam.name*".bson"
     if isfile(filename)
-        df = CSV.read(filename, DataFrame, header=0)
-        exam.format.right[:,:] = Matrix{Int}(df)
+        d = load(filename)
+        exam.format.right[:,:] = d[:right]
     else
         exam.format.right[:,:] = rand((1:5), exam.max_questions, exam.max_permutations)
-        CSV.write(filename, Tables.table(exam.format.right), writeheader=false)
+        save(filename,Dict(:right=>exam.format.right))
     end
     return nothing
 end
