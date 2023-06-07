@@ -204,6 +204,7 @@ struct PrintedQuestion <: QuestionFormat
     num_rows    :: Vector{Int}
     int_params  :: Vector{Int}
     right       :: Matrix{Int64}
+    width       :: Vector{Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}}
 end
 struct Unformatted <: QuestionFormat end
 
@@ -212,8 +213,9 @@ const MoodleExamType=2::Int
 struct Format
     num_rows    :: Vector{Int}
     num_options :: Vector{Int}
-    function Format(num_rows=[1 for i in 1:default_max_questions],num_options=[5 for i in 1:default_max_questions])
-        new(num_rows,num_options)
+    width       :: Vector{Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}}
+    function Format(num_rows=[1 for i in 1:default_max_questions],num_options=[5 for i in 1:default_max_questions],width=[2.0cm for i in 1:default_max_questions])
+        new(num_rows,num_options,width)
     end
 end
 
@@ -228,7 +230,7 @@ This struct holds data needed to create an exam to be printed on paper. The cons
 
     PrintedExam(num_permutations;languages=[ENG],headings=StandardHeadings,name="exam",
                 max_permutations=10,max_questions=50,template=StandardTemplate,
-                format=[1 for i=1:10,5 for i=1:50])
+                format=Format([1 for i=1:50],[5 for i=1:50]))
 
 Tipically the number of permutations, languages and headings are defined while other arguments
 keep default values. See `example.jl` in test that ilustrates the use. After creation, some
@@ -260,8 +262,11 @@ struct PrintedExam <: Exam
     vspace::Vector{Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}}
     pagebreak::Vector{Bool}
     format::QuestionFormat
-    function PrintedExam(num_permutations;languages=[ENG],headings=StandardHeadings,name="exam",max_permutations=default_max_permutations,max_questions=default_max_questions,template=StandardTemplate,format=Format([1 for i in 1:max_questions],[5 for i in 1:max_questions]))
-        form=PrintedQuestion(format.num_options,format.num_rows,Vector{Int}(undef,2),Matrix{Int64}(undef,max_questions, max_permutations))
+    function PrintedExam(num_permutations;languages=[ENG],headings=StandardHeadings,name="exam",max_permutations=default_max_permutations,max_questions=default_max_questions,template=StandardTemplate,format=Format())
+        # @assert length(format.num_rows) >= max_questions "Wrong answers format (number of rows)"
+        # @assert length(format.num_options) >= max_questions "Wrong answers format (number of options)"
+        # @assert length(format.width) >= max_questions "Wrong answers format (width)"
+        form=PrintedQuestion(format.num_options,format.num_rows,Vector{Int}(undef,2),Matrix{Int64}(undef,max_questions, max_permutations),format.width)
         # format.right[:,:]=define_correct_answers(name)
         add_defaults!(headings)
         new(name,num_permutations,max_permutations,max_questions,languages,headings,template,Vector{FormatFigure}(undef,0),Vector{Function}(undef,0),Vector{Vector{Tuple}}(undef,0),Vector{Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}}(undef,0),Vector{Bool}(undef,0),form)
@@ -601,19 +606,22 @@ function question(format::PrintedQuestion, msg, var, unitname=""; factor1=rand2(
     res[mod(pos + 3, 5) + 1] = val2latex(val4)
     res[mod(pos + 4, 5) + 1] = val2latex(val)
 
+    str=print_answers(format.width[num_question],format.num_rows[num_question],num_question,msg,res)
+
     # str = """\\textbf{$num_question} $msg \\\\
     # \\begin{tabular}{*{3}{p{2.5cm}}}
     # a) $(res[1]) & b) $(res[2]) & c) $(res[3]) \\\\ d) $(res[4]) & e) $(res[5]) & f) \\rule[0pt]{1cm}{0.75pt} \\\\
     # \\end{tabular}
 
     # """
-    str = """\n
-    \\textbf{$num_question} $msg \\\\
-    \\begin{tabular}{*{5}{p{2.cm}}}
-    a) \$$(res[1])\$ & b) \$$(res[2])\$ & c) \$$(res[3])\$ & d) \$$(res[4])\$ & e) \$$(res[5])\$ \\\\
-    \\end{tabular}
 
-    """
+    # str = """\n
+    # \\textbf{$num_question} $msg \\\\
+    # \\begin{tabular}{*{5}{p{2.cm}}}
+    # a) \$$(res[1])\$ & b) \$$(res[2])\$ & c) \$$(res[3])\$ & d) \$$(res[4])\$ & e) \$$(res[5])\$ \\\\
+    # \\end{tabular}
+
+    # """
     return str
 
 end
@@ -631,30 +639,33 @@ function question(format::PrintedQuestion, msg, eqs::Vector{String})
     res[mod(pos + 3, 5) + 1] = latexify(eqs[perm[4]])
     res[mod(pos + 4, 5) + 1] = latexify(eqs[1]) # same as res[pos] = eqs[1]
 
+    str=print_answers(format.width[num_question],format.num_rows[num_question],num_question,msg,res)
+
+    return str
+
+end
+
+function print_answers(w,k,n,msg,res)
     str=""
-    if format.num_rows[num_question]==1
+    if k==1
         str = """\n
-        \\textbf{$num_question} $msg \\\\
-        \\begin{tabular}{*{5}{p{0.18\\textwidth}}}
+        \\textbf{$n} $msg \\\\
+        \\begin{tabular}{*{5}{p{$w}}}
         a) $(res[1]) & b) $(res[2]) & c) $(res[3]) & d) $(res[4]) & e) $(res[5]) \\\\
         \\end{tabular}
 
         """
-    elseif format.num_rows[num_question]==2
+    elseif k==2
         str = """\n        
-        \\textbf{$num_question} $msg \\\\
-        \\begin{tabular}{*{3}{p{0.18\\textwidth}}}
+        \\textbf{$n} $msg \\\\
+        \\begin{tabular}{*{3}{p{$w}}}
         a) $(res[1]) & b) $(res[2]) & c) $(res[3]) \\\\ 
         d) $(res[4]) & e) $(res[5]) & \\\\
         \\end{tabular}
     
         """
     end
-
-    return str
-
 end
-
 
 
 end

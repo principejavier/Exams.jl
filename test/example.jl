@@ -21,7 +21,7 @@ function generate_exam(nump)
     headings[ENG]["GraphicsPath"] = "{../assets/}"
 
     #exam = PrintedExam(nump,languages=[SPA],headings=headings)
-    exam = PrintedExam(nump,languages=[SPA],headings=headings,format=Format([1,1,1,1,1,2]))
+    exam = PrintedExam(nump,languages=[SPA],headings=headings,format=Format([1,2,1,1,1,2],[5,5,5,5,5,5],[2cm,2cm,2cm,2cm,2cm,2.5cm]))
 
     mass=[1kg,2kg];
     h0=[1m,2m];
