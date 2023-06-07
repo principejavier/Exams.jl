@@ -58,7 +58,7 @@ export ONE2ONE
 export SPA
 export CAT
 export ENG
-#export MUTE
+export MUTE
 
 export uconvert,
     rad, °,        # Angles
@@ -132,7 +132,7 @@ const latex_tail = "\n\\end{document}\n"
 const CAT="catalan"
 const ENG="english"
 const SPA="spanish"
-# const MUTE="mute"
+const MUTE="mute"
 
 default_max_questions = 50 # can be changed from API
 default_max_permutations = 10 # can be changed from API
@@ -198,14 +198,14 @@ abstract type ArgCombination end
 struct ALL2ALL <: ArgCombination end
 struct ONE2ONE <: ArgCombination end
 
-abstract type FormatQuestion end
-struct PrintedQuestion <: FormatQuestion
+abstract type QuestionFormat end
+struct PrintedQuestion <: QuestionFormat
     num_options :: Vector{Int}
     num_rows    :: Vector{Int}
     int_params  :: Vector{Int}
     right       :: Matrix{Int64}
 end
-struct Unformatted <: FormatQuestion end
+struct Unformatted <: QuestionFormat end
 
 const PrintedExamType=1::Int
 const MoodleExamType=2::Int
@@ -218,6 +218,34 @@ struct Format
 end
 
 abstract type Exam end
+
+"""
+    struct PrintedExam <: Exam
+        # private fields
+    end
+
+This struct holds data needed to create an exam to be printed on paper. The constructor is
+
+    PrintedExam(num_permutations;languages=[ENG],headings=StandardHeadings,name="exam",
+                max_permutations=10,max_questions=50,template=StandardTemplate,
+                format=[1 for i=1:10,5 for i=1:50])
+
+Tipically the number of permutations, languages and headings are defined while other arguments
+keep default values. See `example.jl` in test that ilustrates the use. After creation, some
+problems are added calling
+
+    - [`add_problem!(e::Exam,...)`](@ref)
+
+Finally, the exam is generated calling appropriate methods, namely 
+        
+    - [`generate_tex_files(e::Exam)`](@ref)
+    - [`compile_tex_files(e::Exam)`](@ref)
+
+or directly
+
+    - [`generate_pdf_files(e::Exam)`](@ref)
+
+"""
 struct PrintedExam <: Exam
     name::String
     num_permutations::Int
@@ -231,7 +259,7 @@ struct PrintedExam <: Exam
     arguments::Vector{Vector{Tuple}}
     vspace::Vector{Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}}
     pagebreak::Vector{Bool}
-    format::FormatQuestion
+    format::QuestionFormat
     function PrintedExam(num_permutations;languages=[ENG],headings=StandardHeadings,name="exam",max_permutations=default_max_permutations,max_questions=default_max_questions,template=StandardTemplate,format=Format([1 for i in 1:max_questions],[5 for i in 1:max_questions]))
         form=PrintedQuestion(format.num_options,format.num_rows,Vector{Int}(undef,2),Matrix{Int64}(undef,max_questions, max_permutations))
         # format.right[:,:]=define_correct_answers(name)

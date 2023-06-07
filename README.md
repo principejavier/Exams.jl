@@ -6,4 +6,4 @@
 [![Coverage](https://codecov.io/gh/principejavier/Exams.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/principejavier/Exams.jl)
 
 
-This package permits creating several instances of multiple choice exams changing data and solutions
+This package permits creating several instances of multiple choice exams changing data and solutions.
