@@ -186,10 +186,11 @@ struct WrappedFigure <: FormatFigure
     width_fig::Float64
     #vshift::Any
     vshift::Unitful.Quantity{T,Unitful.𝐋,U} where {T<:Real,U<:Unitful.Units}
+    lines::Integer
     hang::Unitful.Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}
-    function WrappedFigure(w,v::Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units};hang::Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}=0.0cm,width_fig=w)
+    function WrappedFigure(w,v::Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units};lines::Integer=-1,hang::Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}=0.0cm,width_fig=w)
         # @assert isa(v,Unitful.Length) "vshift must be given with length units"
-        new(w,width_fig,v,hang)
+        new(w,width_fig,v,lines,hang)
     end
 end
 struct NoFigure<:FormatFigure end
@@ -429,8 +430,12 @@ function format_figure!(format::WrappedFigure,str::Vector{String})
             break
         end
     end
-
-    str[1]="\n\n\\begin{wrapfigure}{r}[$h]{$w\\textwidth}\n\\vspace{$v}\n"*str[1]*"\\end{wrapfigure}\n\n"
+    if format.lines>0
+        nlines=format.lines
+        str[1]="\n\n\\begin{wrapfigure}[$nlines]{r}[$h]{$w\\textwidth}\n\\vspace{$v}\n"*str[1]*"\\end{wrapfigure}\n\n"
+    else
+        str[1]="\n\n\\begin{wrapfigure}{r}[$h]{$w\\textwidth}\n\\vspace{$v}\n"*str[1]*"\\end{wrapfigure}\n\n"
+    end
     return "\n"
 end
 
