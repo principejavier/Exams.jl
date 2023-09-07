@@ -38,6 +38,7 @@ export latexify
 export StandardTemplate
 export StandardHeadings
 export PrintedExam
+export PrintedQuestion
 export add_problem!
 export add_pagebreak!
 export add_vspace!
@@ -79,6 +80,21 @@ export uconvert,
     rpm, h, gal
 
 export PropsSI
+
+const MoodleTemplate="""
+\\documentclass[11pt]{article}
+\\usepackage{amssymb,amsmath}
+\\usepackage[utf8]{inputenc}  % handle accents in pdf, using it causes errors in xml
+\\usepackage{unicode-math}    % Correctly handles unicode characters (degree) in pdf, only with lualatex
+\\usepackage{moodle}          % generate xml
+\\usepackage[catalan]{babel} % hyphentation
+\\usepackage{graphics}
+\\usepackage{pgf}
+\\usepackage{tikz}
+\\usepackage{hyperref}
+\\begin{document}
+
+"""
 
 const StandardTemplate="""
 \\documentclass[11pt]{article}
@@ -200,24 +216,30 @@ struct ALL2ALL <: ArgCombination end
 struct ONE2ONE <: ArgCombination end
 
 abstract type QuestionFormat end
-struct PrintedQuestion <: QuestionFormat
-    num_options :: Vector{Int}
-    num_rows    :: Vector{Int}
-    int_params  :: Vector{Int}
-    right       :: Matrix{Int64}
-    width       :: Vector{Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}}
-end
 struct Unformatted <: QuestionFormat end
-
-const PrintedExamType=1::Int
-const MoodleExamType=2::Int
-struct Format
+struct PrintedQuestion <: QuestionFormat
     num_rows    :: Vector{Int}
     num_options :: Vector{Int}
     width       :: Vector{Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}}
-    function Format(num_rows=[1 for i in 1:default_max_questions],num_options=[5 for i in 1:default_max_questions],width=[2.0cm for i in 1:default_max_questions])
-        new(num_rows,num_options,width)
-    end
+    int_params  :: Vector{Int}
+    right       :: Vector{Vector{Int}}
+end
+function PrintedQuestion(
+    num_rows=[1 for i in 1:default_max_questions],
+    width=[2.0cm for i in 1:default_max_questions],
+    num_options=[5 for i in 1:length(num_rows)])
+    max_questions = length(num_rows)
+    @assert length(num_options) == max_questions
+    @assert length(width) == max_questions
+    @assert num_options == [5 for i=1:max_questions] "The number of options is currently hard-coded to 5"
+    int_params = Vector{Int}(undef,2)
+    right = Vector{Vector{Int}}(undef,default_max_questions)
+    PrintedQuestion(num_rows,num_options,width,int_params,right)
+end
+
+struct OnlineQuestion <: QuestionFormat
+    num_options :: Vector{Int}
+    int_params  :: Vector{Int}
 end
 
 abstract type Exam end
@@ -252,8 +274,6 @@ or directly
 struct PrintedExam <: Exam
     name::String
     num_permutations::Int
-    max_permutations::Int
-    max_questions::Int
     languages::Vector{String}
     headings::Dict{String,Dict{String, String}}
     template::String
@@ -263,16 +283,38 @@ struct PrintedExam <: Exam
     vspace::Vector{Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}}
     pagebreak::Vector{Bool}
     format::QuestionFormat
-    function PrintedExam(num_permutations;languages=[ENG],headings=StandardHeadings,name="exam",max_permutations=default_max_permutations,max_questions=default_max_questions,template=StandardTemplate,format=Format())
-        # @assert length(format.num_rows) >= max_questions "Wrong answers format (number of rows)"
-        # @assert length(format.num_options) >= max_questions "Wrong answers format (number of options)"
-        # @assert length(format.width) >= max_questions "Wrong answers format (width)"
-        form=PrintedQuestion(format.num_options,format.num_rows,Vector{Int}(undef,2),Matrix{Int64}(undef,max_questions, max_permutations),format.width)
-        # format.right[:,:]=define_correct_answers(name)
+    function PrintedExam(num_permutations;languages=[ENG],headings=StandardHeadings,name="exam",template=StandardTemplate,format=PrintedQuestion())
+        define_correct_answers!(format,name,num_permutations)
         add_defaults!(headings)
-        new(name,num_permutations,max_permutations,max_questions,languages,headings,template,Vector{FormatFigure}(undef,0),Vector{Function}(undef,0),Vector{Vector{Tuple}}(undef,0),Vector{Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}}(undef,0),Vector{Bool}(undef,0),form)
+        new(name,num_permutations,languages,headings,template,Vector{FormatFigure}(undef,0),Vector{Function}(undef,0),Vector{Vector{Tuple}}(undef,0),Vector{Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}}(undef,0),Vector{Bool}(undef,0),format)
     end
 end
+
+struct OnlineExam <: Exam
+    name::String
+    num_permutations::Int
+    languages::Vector{String}
+    headings::Dict{String,Dict{String, String}}
+    template::String
+    figures::Vector{FormatFigure}
+    functions::Vector{Function}
+    arguments::Vector{Vector{Tuple}}
+    format::QuestionFormat
+    function OnlineExam(num_permutations;languages=[ENG],headings=OnlineHeadings,name="exam",template=StandardTemplate,format=Format())
+        # Some checks
+        max_questions = length(format.rows)
+        @assert length(format.num_options) == max_questions
+        @assert length(format.width) == max_questions
+        @assert format.options == [5 for i=1:max_questions] "The number of options is currently hard-coded to 5"
+        right = Matrix{Int64}(undef,max_questions, num_permutations)
+        define_correct_anwsers!(right,name,max_questions,num_permutations)
+        form=PrintedQuestion(format.num_options,format.num_rows,Vector{Int}(undef,2),right,format.width)
+        add_defaults!(headings)
+        new(name,num_permutations,max_questions,languages,headings,template,Vector{FormatFigure}(undef,0),Vector{Function}(undef,0),Vector{Vector{Tuple}}(undef,0),Vector{Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}}(undef,0),Vector{Bool}(undef,0),form)
+    end
+end
+
+
 
 function add_problem!(exam::PrintedExam,fmt::FormatFigure,c::Type{<:ArgCombination},f::Function,args...)
     push!(exam.functions,f)
@@ -313,7 +355,6 @@ end
 
 function generate_tex_files(exam::PrintedExam)
 
-    define_correct_answers!(exam)
     num_prob = length(exam.functions)
 
     for lang in exam.languages
@@ -343,7 +384,7 @@ function generate_tex_files(exam::PrintedExam)
     end
     np=exam.format.int_params[1]
     nq=exam.format.int_params[2]
-    CSV.write(exam.name*"_results.csv", Tables.table(hcat(head1[1:np],head2[1:np],right_names[transpose(exam.format.right[1:nq,1:np])])), header=false, delim=";")
+    CSV.write(exam.name*"_results.csv", Tables.table(hcat(head1[1:np],head2[1:np],right_names[hcat(exam.format.right[1:nq]...)])), header=false, delim=";")
 
     return nothing
 
@@ -377,30 +418,29 @@ function takediag(prod::Iterators.ProductIterator,n)
     return vars
 end
 
-function define_correct_answers!(exam::PrintedExam)
-    filename=exam.name*".bson"
+# function define_correct_answers!(exam::PrintedExam)
+#     filename=exam.name*".bson"
+#     if isfile(filename)
+#         d = load(filename)
+#         exam.format.right[:,:] = d[:right]
+#     else
+#         exam.format.right[:,:] = rand((1:5), exam.max_questions, exam.max_permutations)
+#         save(filename,Dict(:right=>exam.format.right))
+#     end
+#     return nothing
+# end
+
+function define_correct_answers!(format::PrintedQuestion,name::String,np::Int)
+    filename=name*".bson"
     if isfile(filename)
         d = load(filename)
-        exam.format.right[:,:] = d[:right]
+        format.right[:] = d[:right]
     else
-        exam.format.right[:,:] = rand((1:5), exam.max_questions, exam.max_permutations)
-        save(filename,Dict(:right=>exam.format.right))
+        nq = length(format.right)
+        format.right[:] = [rand((1:5),np) for i=1:nq]
+        save(filename,Dict(:right=>format.right))
     end
-    return nothing
 end
-
-# function define_correct_answers(name::String)
-#     # global right
-#     filename=name*"_results.csv"
-#     if isfile(filename)
-#         df = CSV.read(filename, DataFrame, header=0)
-#         right = Matrix{Int}(df)
-#     else
-#         right = rand((1:5), max_questions, max_permutations)
-#         CSV.write(filename, Tables.table(right), writeheader=false)
-#     end
-#     return right
-# end
 
 function figure(name, label="", caption="")
     figure = """
@@ -602,7 +642,7 @@ function question(format::PrintedQuestion, msg, var, unitname=""; factor1=rand2(
 
     format.int_params[2]=format.int_params[2]+1
     num_question = format.int_params[2]
-    pos = format.right[format.int_params[2],format.int_params[1]]
+    pos = format.right[format.int_params[2]][format.int_params[1]]
     res = Array{String}(undef,5);
     #res = zeros(5);
     res[mod(pos, 5) + 1] = val2latex(val1)
@@ -635,7 +675,7 @@ function question(format::PrintedQuestion, msg, eqs::Vector{String})
 
     format.int_params[2]=format.int_params[2]+1
     num_question = format.int_params[2]
-    pos = format.right[format.int_params[2],format.int_params[1]]
+    pos = format.right[format.int_params[2]][format.int_params[1]]
     res = Vector{String}(undef,5);
     perm = sample(2:5, 4, replace = false)
     res[mod(pos    , 5) + 1] = latexify(eqs[perm[1]])

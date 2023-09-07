@@ -18,7 +18,7 @@ makedocs(;
     ],
 )
 
-deploydocs(;
-    repo="github.com/principejavier/Exams.jl",
-    devbranch="main",
-)
+# deploydocs(;
+#     repo="github.com/principejavier/Exams.jl",
+#     devbranch="main",
+# )
