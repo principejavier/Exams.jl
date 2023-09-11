@@ -382,8 +382,9 @@ struct OnlineExam <: Exam
     functions::Vector{Function}
     arguments::Vector{Vector{Tuple}}
     format::QuestionFormat
+    figfiles::Vector{String}
     function OnlineExam(num_permutations;languages=[ENG],headings=MoodleHeadings,name="exam",template=MoodleTemplate,format=OnlineQuestion())
-        new(name,num_permutations,languages,headings,template,Vector{LatexFigure}(undef,0),Vector{Function}(undef,0),Vector{Vector{Tuple}}(undef,0),format)
+        new(name,num_permutations,languages,headings,template,Vector{LatexFigure}(undef,0),Vector{Function}(undef,0),Vector{Vector{Tuple}}(undef,0),format,Vector{String}(undef,0))
     end
 end
 
@@ -453,7 +454,7 @@ end
 function generate_tex_files(exam::OnlineExam)
 
     num_prob = length(exam.functions)
-
+    process_images=true
     for lang in get_languages(exam)
         for i = 1:get_num_permutations(exam)
             exam.format.int_params[1] = i
@@ -476,6 +477,18 @@ function generate_tex_files(exam::OnlineExam)
             write(io_tex, last_page)
             write(io_tex, latex_tail);
             close(io_tex);
+            if process_images
+                io_tex = open(filename*".tex","r");
+                st=read(io_tex,String)
+                st=replace(replace(st,"{ {"=>"{"),"} }"=>"}")
+                mf=match(r"includegraphics.*{(.*)}",st)
+                mp=match(r"graphicspath{(.*)}",st)
+                push!(exam.figfiles,mf.captures...) # To delete them after compile
+                for s in mf.captures
+                    run(`openssl enc -base64 -A -in $(mp.captures[1])/$s.png -out $s.enc`)
+                end
+                process_images = false
+            end
         end
     end
 
@@ -485,11 +498,16 @@ end
 
 function compile_tex_files(exam::Exam)
 
+    # if isa(exam,PrintedExam)
+    #     compiler="lualatex"
+    # elseif isa(exam,OnlineExam)
+    #     compiler="pdflatex"
+    # end
+    compiler="lualatex"
     for lang in get_languages(exam)
         for i = 1:get_num_permutations(exam)
             filename = exam.name*"_"*lang*"_$i"
-            # pdflatex = `lualatex $(filename)`
-            pdflatex = `pdflatex $(filename)`
+            pdflatex = `$compiler $(filename)`
             run(pdflatex)
             run(pdflatex)
             rm(filename*".aux")
@@ -497,8 +515,22 @@ function compile_tex_files(exam::Exam)
             rm(filename*".out")
         end
     end
+    postcompile!(exam)
     return nothing
+end
 
+function postcompile!(exam::PrintedExam) end
+function postcompile!(exam::OnlineExam)
+    for f in exam.figfiles
+        rm(f*".enc")
+    end
+    for lang in get_languages(exam)
+        for i = 1:get_num_permutations(exam)
+            filename = exam.name*"_"*lang*"_$i-moodle.xml"
+            run(`sed -i.backup 's/MULTICHOICE/MULTICHOICE_VS/g' $filename`)
+            run(`sed -i 's/PENALTY/%-25%/g' $filename`)
+        end
+    end
 end
 
 function takediag(prod::Iterators.ProductIterator,n)
@@ -540,8 +572,8 @@ function figure(name, label="", caption="")
     figure = """
     \\includegraphics[width]{$name}
     """
-    (caption > "")  && ( figure = figure*"\\caption{$caption} \n" )
-    (label   > "")  && ( figure = figure*"\\label{$label} \n" )
+    (caption > "")  && ( figure = figure*"\\caption{$caption}\n" )
+    (label   > "")  && ( figure = figure*"\\label{$label}\n" )
     return figure
 end
 
@@ -592,8 +624,8 @@ function format_figure!(format::InlinedFigure,str::Vector{String})
     for (i,s) in enumerate(str)
         if occursin("includegraphics",s) 
             # t=replace(s,"\\centering"=>"\n")
-            t=replace(s,r"\\caption{.*}"=>"\n")
-            t=replace(t,r"\\label{.*}"=>"\n")
+            t=replace(s,r"\\caption{.*}\n"=>"")
+            t=replace(t,r"\\label{.*}\n"=>"")
             str[i]="\n\n\\begin{center}\n"*replace(t,"width"=>"width=$w\\textwidth")*"\\end{center}\n\n"
             break
         end
