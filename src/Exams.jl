@@ -49,6 +49,7 @@ export add_vspace!
 export generate_pdf_files
 export generate_tex_files
 export compile_tex_files
+export cleanup_files
 
 export var2out
 export question
@@ -412,6 +413,7 @@ end
 function generate_pdf_files(exam::Exam)
     generate_tex_files(exam)
     compile_tex_files(exam)
+    cleanup_files(exam)
 end
 
 function generate_tex_files(exam::PrintedExam)
@@ -497,12 +499,6 @@ function generate_tex_files(exam::OnlineExam)
 end
 
 function compile_tex_files(exam::Exam)
-
-    # if isa(exam,PrintedExam)
-    #     compiler="lualatex"
-    # elseif isa(exam,OnlineExam)
-    #     compiler="pdflatex"
-    # end
     compiler="lualatex"
     for lang in get_languages(exam)
         for i = 1:get_num_permutations(exam)
@@ -510,27 +506,49 @@ function compile_tex_files(exam::Exam)
             pdflatex = `$compiler $(filename)`
             run(pdflatex)
             run(pdflatex)
+        end
+    end
+    postcompile(exam)
+    return nothing
+end
+
+function postcompile(exam::PrintedExam) end
+function postcompile(exam::OnlineExam)
+    for lang in get_languages(exam)
+        for i = 1:get_num_permutations(exam)
+            filename = exam.name*"_"*lang*"_$i-moodle.xml"
+            run(`sed -i 's/MULTICHOICE/MULTICHOICE_VS/g' $filename`)
+            run(`sed -i 's/PENALTY/%-25%/g' $filename`)
+        end
+    end
+    return nothing
+end
+
+function cleanup_files(exam::PrintedExam)
+    for lang in get_languages(exam)
+        for i = 1:get_num_permutations(exam)
+            filename = exam.name*"_"*lang*"_$i"
             rm(filename*".aux")
             rm(filename*".log")
             rm(filename*".out")
         end
     end
-    postcompile!(exam)
     return nothing
 end
-
-function postcompile!(exam::PrintedExam) end
-function postcompile!(exam::OnlineExam)
+function cleanup_files(exam::OnlineExam)
     for f in exam.figfiles
         rm(f*".enc")
     end
     for lang in get_languages(exam)
         for i = 1:get_num_permutations(exam)
-            filename = exam.name*"_"*lang*"_$i-moodle.xml"
-            run(`sed -i.backup 's/MULTICHOICE/MULTICHOICE_VS/g' $filename`)
-            run(`sed -i 's/PENALTY/%-25%/g' $filename`)
+            filename = exam.name*"_"*lang*"_$i"
+            rm(filename*".auxlock")
+            rm(filename*".aux")
+            rm(filename*".log")
+            rm(filename*".out")
         end
     end
+    return nothing
 end
 
 function takediag(prod::Iterators.ProductIterator,n)
