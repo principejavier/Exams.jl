@@ -90,7 +90,7 @@ const MoodleTemplate="""
 \\documentclass[11pt]{article}
 \\usepackage{amssymb,amsmath}
 \\usepackage{moodle}          % generate xml
-\\usepackage[catalan]{babel} % hyphentation
+\\usepackage[{{{Language}}}]{babel} % hyphentation
 \\usepackage{graphics}
 \\usepackage{pgf}
 \\usepackage{tikz}
@@ -105,7 +105,7 @@ const StandardTemplate="""
 \\usepackage{amssymb,amsmath}
 \\usepackage[utf8]{inputenc}  % handle accents in pdf, using it causes errors in xml
 \\usepackage{unicode-math}    % Correctly handles unicode characters (degree) in pdf, only with lualatex
-\\usepackage[catalan]{babel} % hyphentation
+\\usepackage[{{{Language}}}]{babel} % hyphentation
 \\usepackage{wrapfig}
 \\usepackage{graphics}
 \\usepackage{pgf}
@@ -115,8 +115,6 @@ const StandardTemplate="""
 \\usepackage{enumitem}
 \\setlist[enumerate]{left=0pt,topsep=0pt,label={\\bf \\arabic*},resume}
 
-\\renewcommand{\\figurename}{Figura}
-\\renewcommand{\\tablename}{Tabla}
 \\linespread{1.3}
 \\parindent 0mm
 \\parskip 2mm
@@ -164,6 +162,10 @@ StandardHeadings = Dict{String,Dict{String, String}}()
 StandardHeadings[SPA]=Dict{String,String}()
 StandardHeadings[CAT]=Dict{String,String}()
 StandardHeadings[ENG]=Dict{String,String}()
+
+StandardHeadings[SPA]["Language"]=SPA
+StandardHeadings[CAT]["Language"]=CAT
+StandardHeadings[ENG]["Language"]=ENG
 
 StandardHeadings[SPA]["ExamRules"]="Sólo hay una respuesta correcta para cada pregunta, marcarla en la hoja de respuestas {\\bf llenando completamente el rectángulo correspondiente}. Cada respuesta incorrecta {\\bf resta un 25\\%} del valor de una correcta. En la hoja de respuestas hay que marcar el DNI (o NIE o pasaporte) y la permutación."
 StandardHeadings[CAT]["ExamRules"]="Només hi ha una resposta correcta per a cada pregunta, marcar-la en la fulla de respostes {\\bf emplenant completament el rectangle corresponent}.  Cada resposta incorrecta {\\bf resta un 25\\%} del valor d'una correcta. En la fulla de respostes cal marcar el DNI (o NIE o passaport) i la permutació."
