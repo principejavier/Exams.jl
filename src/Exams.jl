@@ -615,9 +615,9 @@ function format_figure!(format::WrappedFigure,str::Vector{String})
     end
     if format.lines>0
         nlines=format.lines
-        str[1]="\n\n\\begin{wrapfigure}[$nlines]{r}[$h]{$w\\textwidth}\n\\vspace{$v}\n"*str[1]*"\\end{wrapfigure}\n\n"
+        str[1]="\n\n\\begin{wrapfigure}[$nlines]{r}[$h]{$w\\textwidth}\n\\raggedleft\\vspace{$v}\n"*str[1]*"\\end{wrapfigure}\n\n"
     else
-        str[1]="\n\n\\begin{wrapfigure}{r}[$h]{$w\\textwidth}\n\\vspace{$v}\n"*str[1]*"\\end{wrapfigure}\n\n"
+        str[1]="\n\n\\begin{wrapfigure}{r}[$h]{$w\\textwidth}\n\\raggedleft\\vspace{$v}\n"*str[1]*"\\end{wrapfigure}\n\n"
     end
     return "\n"
 end
