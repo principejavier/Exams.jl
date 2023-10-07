@@ -662,7 +662,7 @@ function begin_quiz(language,name)
     return str
 end
 function begin_cloze(name)
-    str = "\\begin{cloze}{$name}\n"
+    str = "\\begin{cloze}{$(replace(name, "_" => " "))}\n"
     return str
 end
 
