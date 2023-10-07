@@ -464,11 +464,11 @@ function generate_tex_files(exam::OnlineExam)
         io_tex = open(filename*".tex","w");
         render(io_tex,replace(exam.template,"\\end{document}"=>""),exam.headings[lang])
         last_page=""
+        write(io_tex,begin_quiz(lang,exam.name))
         for i = 1:get_num_permutations(exam)
             exam.format.int_params[1] = i
             exam.format.int_params[2] = 0
             # Loop over problems
-            write(io_tex,begin_quiz(lang,exam.name))
             for k = 1:num_prob
                 write(io_tex,begin_cloze(exam.name))
                 problem_slices=exam.functions[k](exam.arguments[k][i]...,lang,exam.format)
@@ -477,8 +477,8 @@ function generate_tex_files(exam::OnlineExam)
                 write(io_tex, problem);
                 write(io_tex, end_cloze())
             end
-            write(io_tex, end_quiz())
         end
+        write(io_tex, end_quiz())
         write(io_tex, last_page)
         write(io_tex, latex_tail);
         close(io_tex);
