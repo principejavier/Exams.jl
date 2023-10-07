@@ -460,15 +460,15 @@ function generate_tex_files(exam::OnlineExam)
     num_prob = length(exam.functions)
     process_images=true
     for lang in get_languages(exam)
+        filename = exam.name*"_"*lang
+        io_tex = open(filename*".tex","w");
+        render(io_tex,replace(exam.template,"\\end{document}"=>""),exam.headings[lang])
+        last_page=""
         for i = 1:get_num_permutations(exam)
             exam.format.int_params[1] = i
             exam.format.int_params[2] = 0
-            filename = exam.name*"_"*lang*"_$i"
-            io_tex = open(filename*".tex","w");
-            render(io_tex,replace(exam.template,"\\end{document}"=>""),exam.headings[lang])
             # Loop over problems
             write(io_tex,begin_quiz(lang,exam.name))
-            last_page=""
             for k = 1:num_prob
                 write(io_tex,begin_cloze(exam.name))
                 problem_slices=exam.functions[k](exam.arguments[k][i]...,lang,exam.format)
@@ -478,21 +478,21 @@ function generate_tex_files(exam::OnlineExam)
                 write(io_tex, end_cloze())
             end
             write(io_tex, end_quiz())
-            write(io_tex, last_page)
-            write(io_tex, latex_tail);
-            close(io_tex);
-            if process_images
-                io_tex = open(filename*".tex","r");
-                st=read(io_tex,String)
-                st=replace(replace(st,"{ {"=>"{"),"} }"=>"}")
-                mf=match(r"includegraphics.*{(.*)}",st)
-                mp=match(r"graphicspath{(.*)}",st)
-                push!(exam.figfiles,mf.captures...) # To delete them after compile
-                for s in mf.captures
-                    run(`openssl enc -base64 -A -in $(mp.captures[1])/$s.png -out $s.enc`)
-                end
-                process_images = false
+        end
+        write(io_tex, last_page)
+        write(io_tex, latex_tail);
+        close(io_tex);
+        if process_images
+            io_tex = open(filename*".tex","r");
+            st=read(io_tex,String)
+            st=replace(replace(st,"{ {"=>"{"),"} }"=>"}")
+            mf=match(r"includegraphics.*{(.*)}",st)
+            mp=match(r"graphicspath{(.*)}",st)
+            push!(exam.figfiles,mf.captures...) # To delete them after compile
+            for s in mf.captures
+                run(`openssl enc -base64 -A -in $(mp.captures[1])/$s.png -out $s.enc`)
             end
+            process_images = false
         end
     end
 
@@ -500,7 +500,7 @@ function generate_tex_files(exam::OnlineExam)
 
 end
 
-function compile_tex_files(exam::Exam)
+function compile_tex_files(exam::PrintedExam)
     compiler="lualatex"
     for lang in get_languages(exam)
         for i = 1:get_num_permutations(exam)
@@ -510,18 +510,19 @@ function compile_tex_files(exam::Exam)
             run(pdflatex)
         end
     end
-    postcompile(exam)
     return nothing
 end
 
-function postcompile(exam::PrintedExam) end
-function postcompile(exam::OnlineExam)
+function compile_tex_files(exam::OnlineExam)
+    compiler="lualatex"
     for lang in get_languages(exam)
-        for i = 1:get_num_permutations(exam)
-            filename = exam.name*"_"*lang*"_$i-moodle.xml"
-            run(`sed -i 's/MULTICHOICE/MULTICHOICE_VS/g' $filename`)
-            run(`sed -i 's/PENALTY/%-25%/g' $filename`)
-        end
+        filename = exam.name*"_"*lang
+        pdflatex = `$compiler $(filename)`
+        run(pdflatex)
+        run(pdflatex)
+        filename = exam.name*"_"*lang*"-moodle.xml"
+        run(`sed -i 's/MULTICHOICE/MULTICHOICE_VS/g' $filename`)
+        run(`sed -i 's/PENALTY/%-25%/g' $filename`)
     end
     return nothing
 end
@@ -542,13 +543,11 @@ function cleanup_files(exam::OnlineExam)
         rm(f*".enc")
     end
     for lang in get_languages(exam)
-        for i = 1:get_num_permutations(exam)
-            filename = exam.name*"_"*lang*"_$i"
-            rm(filename*".auxlock")
-            rm(filename*".aux")
-            rm(filename*".log")
-            rm(filename*".out")
-        end
+        filename = exam.name*"_"*lang
+        rm(filename*".auxlock")
+        rm(filename*".aux")
+        rm(filename*".log")
+        rm(filename*".out")
     end
     return nothing
 end

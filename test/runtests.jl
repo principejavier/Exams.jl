@@ -12,9 +12,9 @@ using Test
     rm("PrintedExamTest.bson",force=true)
 
     include("example_moodle.jl")
-    generate_quiz(1)
-    @test isfile("OnlineExamTest_spanish_1.tex")
-    @test isfile("OnlineExamTest_spanish_1.pdf")
+    generate_quiz(2)
+    @test isfile("OnlineExamTest_spanish.tex")
+    @test isfile("OnlineExamTest_spanish.pdf")
     rm("OnlineExamTest_spanish_1.pdf",force=true)
     rm("OnlineExamTest_spanish_1.tex",force=true)
     rm("OnlineExamTest_spanish_1-moodle.xml",force=true)
