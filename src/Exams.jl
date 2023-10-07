@@ -658,7 +658,7 @@ function format_figure!(format::NoFigure,str::Vector{String})
 end
 
 function begin_quiz(language,name)
-    str = "\\begin{quiz}{Probs/$language/$name}\n"
+    str = "\\begin{quiz}{Probs/$language/$(replace(name, "_" => " "))}\n"
     return str
 end
 function begin_cloze(name)
