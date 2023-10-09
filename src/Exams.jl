@@ -89,7 +89,31 @@ export PropsSI
 const MoodleTemplate="""
 \\documentclass[11pt]{article}
 \\usepackage{amssymb,amsmath}
-\\usepackage{moodle}          % generate xml
+\\usepackage{moodle} 
+% Fix from https://tex.stackexchange.com/questions/545421/moodle-sty-does-not-include-multiple-quiz
+\\makeatletter
+\\def\\openmoodleout{%
+  \\immediate\\openout\\moodle@outfile=\\outputfilename\\relax
+  \\writetomoodle{<?xml version="1.0" encoding="UTF-8"?>}%
+  \\writetomoodle{<quiz>}%
+  \\writetomoodle{ }%
+}%
+\\renewenvironment{quiz}[2][]%
+{
+  \\setkeys{moodle}{#1}%
+  \\@moodle@ifgeneratexml{\\setcategory{#2}}{}%
+  \\subsection*{#2}%
+  \\begin{enumerate}%
+}{
+  \\end{enumerate}%
+}
+\\AfterEndPreamble{
+  \\@moodle@ifgeneratexml{\\openmoodleout}{}%
+}
+\\AtEndDocument{
+  \\@moodle@ifgeneratexml{\\closemoodleout}{}%
+}
+\\makeatother
 \\usepackage[{{{Language}}}]{babel} % hyphentation
 \\usepackage{graphics}
 \\usepackage{pgf}
@@ -654,7 +678,7 @@ function format_figure!(format::InlinedFigure,str::Vector{String})
             str[i]="\n\n\\begin{center}\n"*replace(t,"width"=>"width=$w\\textwidth")*"\\end{center}\n\n"
             # break
         elseif occursin("\\ref{",s)
-            s=replace(s,r"[ ~]*\\ref{.*}"=>"")
+            str[i]=replace(s,r"[ ~]*\\ref{[^}]*}"=>"")
         end
     end
     return "\n"

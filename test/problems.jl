@@ -4,7 +4,7 @@ function free_fall(mass,h0,v0,language=nothing,format=nothing)
     h0_out=var2out(h0)
     v0_out=var2out(v0)
     g=9.81m/s^2
-    g_out=var2out(g,"m/s^2")
+    g_out=var2out(g,"","m/s^2")
 
     #h=h0+v0*t-0.5*g*t^2
     t=2*v0/g+sqrt(v0^2+2*g*h0)/g
