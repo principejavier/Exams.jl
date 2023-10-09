@@ -490,12 +490,11 @@ function generate_tex_files(exam::OnlineExam)
         render(io_tex,replace(exam.template,"\\end{document}"=>""),exam.headings[lang])
         last_page=""
         exam.sections==:SingleSection && write(io_tex,begin_quiz(lang,exam.name))
-        for i = 1:get_num_permutations(exam)
-            exam.sections==:MultipleSections && write(io_tex,begin_quiz(lang,exam.name*"_P$i"))
-            exam.format.int_params[1] = i
-            exam.format.int_params[2] = 0
-            # Loop over problems
-            for k = 1:num_prob
+        # Loop over problems
+        for k = 1:num_prob
+            exam.sections==:MultipleSections && write(io_tex,begin_quiz(lang,exam.name*"/P$k"))
+            for i = 1:get_num_permutations(exam)
+                exam.format.int_params[2] = 0
                 write(io_tex,begin_cloze(exam.name))
                 problem_slices=exam.functions[k](exam.arguments[k][i]...,lang,exam.format)
                 last_page=last_page*format_figure!(exam.figures[k],problem_slices)
