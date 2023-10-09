@@ -495,7 +495,7 @@ function generate_tex_files(exam::OnlineExam)
             exam.sections==:MultipleSections && write(io_tex,begin_quiz(lang,exam.name*"/P$k"))
             for i = 1:get_num_permutations(exam)
                 exam.format.int_params[2] = 0
-                write(io_tex,begin_cloze(exam.name))
+                write(io_tex,begin_cloze("P$k"))
                 problem_slices=exam.functions[k](exam.arguments[k][i]...,lang,exam.format)
                 last_page=last_page*format_figure!(exam.figures[k],problem_slices)
                 problem=prod(problem_slices)
