@@ -385,9 +385,10 @@ struct OnlineExam <: Exam
     functions::Vector{Function}
     arguments::Vector{Vector{Tuple}}
     format::QuestionFormat
+    sections::Symbol
     figfiles::Vector{String}
-    function OnlineExam(num_permutations;languages=[ENG],headings=MoodleHeadings,name="exam",template=MoodleTemplate,format=OnlineQuestion())
-        new(name,num_permutations,languages,headings,template,Vector{LatexFigure}(undef,0),Vector{Function}(undef,0),Vector{Vector{Tuple}}(undef,0),format,Vector{String}(undef,0))
+    function OnlineExam(num_permutations;languages=[ENG],headings=MoodleHeadings,name="exam",template=MoodleTemplate,format=OnlineQuestion(),sections=:SingleSection)
+        new(name,num_permutations,languages,headings,template,Vector{LatexFigure}(undef,0),Vector{Function}(undef,0),Vector{Vector{Tuple}}(undef,0),format,sections,Vector{String}(undef,0))
     end
 end
 
@@ -464,8 +465,9 @@ function generate_tex_files(exam::OnlineExam)
         io_tex = open(filename*".tex","w");
         render(io_tex,replace(exam.template,"\\end{document}"=>""),exam.headings[lang])
         last_page=""
-        write(io_tex,begin_quiz(lang,exam.name))
+        exam.sections==:SingleSection && write(io_tex,begin_quiz(lang,exam.name))
         for i = 1:get_num_permutations(exam)
+            exam.sections==:MultipleSections && write(io_tex,begin_quiz(lang,exam.name*"_P$i"))
             exam.format.int_params[1] = i
             exam.format.int_params[2] = 0
             # Loop over problems
@@ -477,8 +479,9 @@ function generate_tex_files(exam::OnlineExam)
                 write(io_tex, problem);
                 write(io_tex, end_cloze())
             end
+            exam.sections==:MultipleSections && write(io_tex, end_quiz())
         end
-        write(io_tex, end_quiz())
+        exam.sections==:SingleSection && write(io_tex, end_quiz())
         write(io_tex, last_page)
         write(io_tex, latex_tail);
         close(io_tex);
@@ -486,11 +489,14 @@ function generate_tex_files(exam::OnlineExam)
             io_tex = open(filename*".tex","r");
             st=read(io_tex,String)
             st=replace(replace(st,"{ {"=>"{"),"} }"=>"}")
-            mf=match(r"includegraphics.*{(.*)}",st)
+            mf=collect(eachmatch(r"includegraphics.*{(.*)}",st))
             mp=match(r"graphicspath{(.*)}",st)
-            push!(exam.figfiles,mf.captures...) # To delete them after compile
-            for s in mf.captures
-                run(`openssl enc -base64 -A -in $(mp.captures[1])/$s.png -out $s.enc`)
+            for c in mf
+                s=c.captures[1]
+                if findfirst(x->x==s,exam.figfiles) === nothing
+                    push!(exam.figfiles,s) # Add it to the list of figures
+                    run(`openssl enc -base64 -A -in $(mp.captures[1])/$s.png -out $s.enc`)
+                end
             end
             process_images = false
         end
@@ -641,12 +647,14 @@ function format_figure!(format::InlinedFigure,str::Vector{String})
     @assert length(str)>0 "Empty string vector in format_figure!(FloatingFigure,...)"
     w=format.width
     for (i,s) in enumerate(str)
-        if occursin("includegraphics",s) 
+        if occursin("includegraphics",s)
             # t=replace(s,"\\centering"=>"\n")
             t=replace(s,r"\\caption{.*}\n"=>"")
             t=replace(t,r"\\label{.*}\n"=>"")
             str[i]="\n\n\\begin{center}\n"*replace(t,"width"=>"width=$w\\textwidth")*"\\end{center}\n\n"
-            break
+            # break
+        elseif occursin("\\ref{",s)
+            s=replace(s,r"[ ~]*\\ref{.*}"=>"")
         end
     end
     return "\n"

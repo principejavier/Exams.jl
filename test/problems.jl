@@ -11,12 +11,13 @@ function free_fall(mass,h0,v0,language=nothing,format=nothing)
     v=v0-g*t
 
     if language==SPA 
-        statement = "Un cuerpo de masa $mass_out es lanzado hacia arriba desde una altura $h0_out a una velocidad $v0_out. La aceleración local de la gravedad es $g_out. Determinar:"
+        statement = "Un cuerpo de masa $mass_out es lanzado hacia arriba desde una altura $h0_out a una velocidad $v0_out como se muestra en la figura~\\ref{fig:caidalibre}. La aceleración local de la gravedad es $g_out. Determinar:"
         figure1 = figure("ball","fig:caidalibre","Cuerpo en caída libre");
         question1 = question(format,"el tiempo que tarda en caer al suelo (en unitname),", t,"s");
         question2 = question(format,"la velocidad que alcanza al tocar el suelo (en unitname),", v,"km/h");
     elseif language==CAT
-        statement = "Un cos de massa $mass_out és llançat cap amunt des d'una alçada $h0_out a una velocitat $v0_out. L'acceleració local de la gravetat és $g_out. Determinar:"
+        statement = "Un cos de massa $mass_out és llançat cap amunt des d'una alçada $h0_out a una velocitat $v0_out, com es mostra a la figura~\\ref{fig:caidalibre}. L'acceleració local de la gravetat és $g_out. Determinar:"
+        figure1 = figure("ball","fig:caidalibre","Cos en caiguda lliure");
         question1 = question(format,"el temps que triga a caure a terra (en unitname),", t,"s");
         question2 = question(format,"la velocitat que arriba a tenir al tocar a terra (en unitname),", v,"km/h");
     elseif language==ENG

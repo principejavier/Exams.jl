@@ -9,7 +9,7 @@ function generate_quiz(nump)
     headings[CAT]["GraphicsPath"] = "{../assets/}"
     headings[ENG]["GraphicsPath"] = "{../assets/}"
 
-    quiz = OnlineExam(nump,languages=[SPA],headings=headings,name="OnlineExamTest")
+    quiz = OnlineExam(nump,languages=[SPA],headings=headings,name="OnlineExamTest",sections=:MultipleSections)
     mass=[1kg,2kg];
     h0=[1m,2m];
     v0=[1m/s,2m/s];
