@@ -125,7 +125,7 @@ const MoodleTemplate="""
 """
 
 const StandardTemplate="""
-\\documentclass[11pt]{article}
+\\documentclass[11pt,a4paper]{article}
 \\usepackage{amssymb,amsmath}
 \\usepackage[utf8]{inputenc}  % handle accents in pdf, using it causes errors in xml
 \\usepackage{unicode-math}    % Correctly handles unicode characters (degree) in pdf, only with lualatex
