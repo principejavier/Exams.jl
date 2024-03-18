@@ -69,15 +69,24 @@ end
 function theory_questions(language=nothing,format=Unformatted)
 
     eq = Vector{String}(undef,5);
-    eq[1]="F=m*a"    # this the correct one, it will be shuffled when generating permutations
-    eq[2]="F=m*a^2"
-    eq[3]="F=m*g"
-    eq[4]="F=m/a"
-    eq[5]="F=m^2*a"
+    eq[1]=latexify("F=m*a")    # this the correct one, it will be shuffled when generating permutations
+    eq[2]=latexify("F=m*a^2")
+    eq[3]=latexify("F=m*g")
+    eq[4]=latexify("F=m/a")
+    eq[5]=latexify("F=m^2*a")
+
+    as = Vector{String}(undef,5);
+    as[1]="la fuerza con la masa y la aceleración"
+    as[2]="la fuerza con la aceleración"
+    as[3]="la fuerza con la masa"
+    as[4]="la aceleración con la masa"
+    as[5]="ninguna de las otras"
+
 
     if language==SPA 
         statement = "Teoría de la mecánica clásica."
         question1=question(format,"La ley de Newton se puede escribir como:",eq)
+        question2=question(format,"La ley de Newton relaciona:",as)
     elseif language==CAT
         statement = "Teoria de la mecànica clàssica."
         question1=question(format,"La llei de Newton es pot escriure com:",eq)
@@ -85,6 +94,6 @@ function theory_questions(language=nothing,format=Unformatted)
         statement = "Theory of classical mechanics."
         question1=question(format,"The Newton law can be written as,",eq)
     end
-    return [statement,question1]
-
+    return [statement,question1,question2]
+W
 end

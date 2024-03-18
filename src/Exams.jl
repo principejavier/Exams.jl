@@ -847,11 +847,11 @@ function question(format::PrintedQuestion, msg, eqs::Vector{String})
     pos = format.right[format.int_params[2]][format.int_params[1]]
     res = Vector{String}(undef,5);
     perm = sample(2:5, 4, replace = false)
-    res[mod(pos    , 5) + 1] = latexify(eqs[perm[1]])
-    res[mod(pos + 1, 5) + 1] = latexify(eqs[perm[2]])
-    res[mod(pos + 2, 5) + 1] = latexify(eqs[perm[3]])
-    res[mod(pos + 3, 5) + 1] = latexify(eqs[perm[4]])
-    res[mod(pos + 4, 5) + 1] = latexify(eqs[1]) # same as res[pos] = eqs[1]
+    res[mod(pos    , 5) + 1] = eqs[perm[1]]
+    res[mod(pos + 1, 5) + 1] = eqs[perm[2]]
+    res[mod(pos + 2, 5) + 1] = eqs[perm[3]]
+    res[mod(pos + 3, 5) + 1] = eqs[perm[4]]
+    res[mod(pos + 4, 5) + 1] = eqs[1] # same as res[pos] = eqs[1]
 
     str=print_answers(format.width[num_question],format.num_rows[num_question],num_question,msg,res)
 
@@ -878,6 +878,15 @@ function print_answers(w,k,n,msg,res)
         \\end{tabular}
     
         """
+    elseif k==5
+        str = """\n        
+        \\textbf{$n} $msg  \\\\
+        a) $(res[1])  \\\\
+        b) $(res[2])  \\\\
+        c) $(res[3])   \\\\
+        d) $(res[4])  \\\\
+        e) $(res[5])  \\\\
+        """        
     end
 end
 
