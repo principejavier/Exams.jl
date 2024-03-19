@@ -885,7 +885,7 @@ function print_answers(w,k,n,msg,res)
         b) $(res[2])  \\\\
         c) $(res[3])   \\\\
         d) $(res[4])  \\\\
-        e) $(res[5])  \\\\
+        e) $(res[5]) 
         """        
     end
 end
