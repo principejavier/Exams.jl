@@ -216,6 +216,10 @@ StandardHeadings[SPA]["ProblemName"]="Problema"
 StandardHeadings[CAT]["ProblemName"]="Problema"
 StandardHeadings[ENG]["ProblemName"]="Problem"
 
+StandardHeadings[SPA]["ExtraQuestionsName"]="Preguntas adicionales"
+StandardHeadings[CAT]["ExtraQuestionsName"]="Preguntes addicionals"
+StandardHeadings[ENG]["ExtraQuestionsName"]="Additional questions"
+
 OnlineHeadings = Dict{String,Dict{String, String}}()
 OnlineHeadings[SPA]=Dict{String,String}()
 OnlineHeadings[CAT]=Dict{String,String}()
