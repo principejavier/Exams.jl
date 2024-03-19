@@ -130,6 +130,7 @@ const StandardTemplate="""
 \\usepackage[utf8]{inputenc}  % handle accents in pdf, using it causes errors in xml
 \\usepackage{unicode-math}    % Correctly handles unicode characters (degree) in pdf, only with lualatex
 \\usepackage[{{{Language}}}]{babel} % hyphentation
+\\usepackage{siunitx}
 \\usepackage{wrapfig}
 \\usepackage{graphics}
 \\usepackage{pgf}
