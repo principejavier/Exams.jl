@@ -90,30 +90,6 @@ const MoodleTemplate="""
 \\documentclass[11pt]{article}
 \\usepackage{amssymb,amsmath}
 \\usepackage{moodle} 
-% Fix from https://tex.stackexchange.com/questions/545421/moodle-sty-does-not-include-multiple-quiz
-\\makeatletter
-\\def\\openmoodleout{%
-  \\immediate\\openout\\moodle@outfile=\\outputfilename\\relax
-  \\writetomoodle{<?xml version="1.0" encoding="UTF-8"?>}%
-  \\writetomoodle{<quiz>}%
-  \\writetomoodle{ }%
-}%
-\\renewenvironment{quiz}[2][]%
-{
-  \\setkeys{moodle}{#1}%
-  \\@moodle@ifgeneratexml{\\setcategory{#2}}{}%
-  \\subsection*{#2}%
-  \\begin{enumerate}%
-}{
-  \\end{enumerate}%
-}
-\\AfterEndPreamble{
-  \\@moodle@ifgeneratexml{\\openmoodleout}{}%
-}
-\\AtEndDocument{
-  \\@moodle@ifgeneratexml{\\closemoodleout}{}%
-}
-\\makeatother
 \\usepackage[{{{Language}}}]{babel} % hyphentation
 \\usepackage{graphics}
 \\usepackage{pgf}
@@ -188,7 +164,7 @@ StandardHeadings[SPA]=Dict{String,String}()
 StandardHeadings[CAT]=Dict{String,String}()
 StandardHeadings[ENG]=Dict{String,String}()
 
-StandardHeadings[SPA]["Language"]=SPA
+StandardHeadings[SPA]["Language"]=SPA*",es-nodecimaldot"
 StandardHeadings[CAT]["Language"]=CAT
 StandardHeadings[ENG]["Language"]=ENG
 
@@ -834,11 +810,11 @@ function question(format::PrintedQuestion, msg, var, unitname=""; factor1=rand2(
     pos = format.right[format.int_params[2]][format.int_params[1]]
     res = Array{String}(undef,5);
 
-    res[mod(pos, 5) + 1] = val2latex(val1)
-    res[mod(pos + 1, 5) + 1] = val2latex(val2)
-    res[mod(pos + 2, 5) + 1] = val2latex(val3)
-    res[mod(pos + 3, 5) + 1] = val2latex(val4)
-    res[mod(pos + 4, 5) + 1] = val2latex(val)
+    res[mod(pos, 5) + 1]     = "\$"*val2latex(val1)*"\$"
+    res[mod(pos + 1, 5) + 1] = "\$"*val2latex(val2)*"\$"
+    res[mod(pos + 2, 5) + 1] = "\$"*val2latex(val3)*"\$"
+    res[mod(pos + 3, 5) + 1] = "\$"*val2latex(val4)*"\$"
+    res[mod(pos + 4, 5) + 1] = "\$"*val2latex(val)*"\$"
 
     str=print_answers(format.width[num_question],format.num_rows[num_question],num_question,msg,res)
     return str

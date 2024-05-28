@@ -15,7 +15,7 @@ using Test
     generate_quiz(2)
     @test isfile("OnlineExamTest_spanish.tex")
     @test isfile("OnlineExamTest_spanish.pdf")
-    rm("OnlineExamTest_spanish_1.pdf",force=true)
-    rm("OnlineExamTest_spanish_1.tex",force=true)
-    rm("OnlineExamTest_spanish_1-moodle.xml",force=true)
+    rm("OnlineExamTest_spanish.pdf",force=true)
+    rm("OnlineExamTest_spanish.tex",force=true)
+    rm("OnlineExamTest_spanish-moodle.xml",force=true)
 end
