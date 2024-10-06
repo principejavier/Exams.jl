@@ -794,6 +794,7 @@ function question(::Nothing, msg, var, unitname=""; factor1=rand2(), factor2=1.2
     res = val2latex(val)
     msg = replace(msg, "unitname" => latex_unit)
     println(msg*" Result: $res")
+    return ""
 end
 
 function question(format::PrintedQuestion, msg, var, unitname=""; factor1=rand2(), factor2=1.2 + 0.2 * rand(), factor3=0.6 + 0.2 * rand(), factor4=1.6 + 0.2 * rand(),num_digits=4)
