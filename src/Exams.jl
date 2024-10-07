@@ -531,7 +531,7 @@ function compile_tex_files(exam::OnlineExam)
         run(pdflatex)
         run(pdflatex)
         filename = exam.name*"_"*lang*"-moodle.xml"
-        run(`sed -i 's/MULTICHOICE/MULTICHOICE_VS/g' $filename`)
+        run(`sed -i 's/MULTICHOICE_S/MULTICHOICE_VS/g' $filename`)
         run(`sed -i 's/PENALTY/%-25%/g' $filename`)
     end
     return nothing
