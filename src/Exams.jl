@@ -617,6 +617,7 @@ function format_figure!(format::WrappedFigure,str::Vector{String})
     h=format.hang
     v=replace("$t",r"\s"=>"")
 
+    # This code only works when figure is first or second. It should be generalized
     if format.put_on_top
         fig_pos = 1
         t=str[fig_pos]
@@ -631,6 +632,7 @@ function format_figure!(format::WrappedFigure,str::Vector{String})
         for (i,s) in enumerate(str)
             if occursin("includegraphics",s) 
                 fig_pos=i
+                str[fig_pos]=replace(s,"width"=>"width=$wfig\\textwidth")
                 break
             end
         end
