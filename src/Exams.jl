@@ -223,9 +223,10 @@ struct WrappedFigure <: LatexFigure
     vshift::Unitful.Quantity{T,Unitful.𝐋,U} where {T<:Real,U<:Unitful.Units}
     lines::Integer
     hang::Unitful.Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}
-    function WrappedFigure(w,v::Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units};lines::Integer=-1,hang::Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}=0.0cm,width_fig=w)
+    put_on_top::Bool
+    function WrappedFigure(w,v::Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units};lines::Integer=-1,hang::Quantity{T, Unitful.𝐋, U} where {T<:Real,U<:Unitful.Units}=0.0cm,width_fig=w,put_on_top=true)
         # @assert isa(v,Unitful.Length) "vshift must be given with length units"
-        new(w,width_fig,v,lines,hang)
+        new(w,width_fig,v,lines,hang,put_on_top)
     end
 end
 struct NoFigure<:LatexFigure end
@@ -616,19 +617,30 @@ function format_figure!(format::WrappedFigure,str::Vector{String})
     h=format.hang
     v=replace("$t",r"\s"=>"")
 
-    t=str[1]
-    for (i,s) in enumerate(str)
-        if occursin("includegraphics",s) 
-            str[1]=replace(s,"width"=>"width=$wfig\\textwidth")
-            str[i]=t
-            break
+    if format.put_on_top
+        fig_pos = 1
+        t=str[fig_pos]
+        for (i,s) in enumerate(str)
+            if occursin("includegraphics",s) 
+                str[1]=replace(s,"width"=>"width=$wfig\\textwidth")
+                str[i]=t
+                break
+            end
+        end
+    else
+        for (i,s) in enumerate(str)
+            if occursin("includegraphics",s) 
+                fig_pos=i
+                break
+            end
         end
     end
+
     if format.lines>0
         nlines=format.lines
-        str[1]="\n\n\\begin{wrapfigure}[$nlines]{r}[$h]{$w\\textwidth}\n\\raggedleft\\vspace{$v}\n"*str[1]*"\\end{wrapfigure}\n\n"
+        str[fig_pos]="\n\n\\begin{wrapfigure}[$nlines]{r}[$h]{$w\\textwidth}\n\\raggedleft\\vspace{$v}\n"*str[1]*"\\end{wrapfigure}\n\n"
     else
-        str[1]="\n\n\\begin{wrapfigure}{r}[$h]{$w\\textwidth}\n\\raggedleft\\vspace{$v}\n"*str[1]*"\\end{wrapfigure}\n\n"
+        str[fig_pos]="\n\n\\begin{wrapfigure}{r}[$h]{$w\\textwidth}\n\\raggedleft\\vspace{$v}\n"*str[1]*"\\end{wrapfigure}\n\n"
     end
     return "\n"
 end
