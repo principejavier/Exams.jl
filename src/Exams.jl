@@ -27,7 +27,8 @@ import Unitful:
     mW, W, kW, MW
 
 #const m=Unitful.m
-const rpm = 2*π*minute^-1
+# const rpm = 2*π*minute^-1
+@unit rpm "rpm" RevolutionsPerMinute 2*π*minute^-1 false
 const h = hr
 const gal = 231inch^3
 
