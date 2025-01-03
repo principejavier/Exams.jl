@@ -123,6 +123,8 @@ const StandardTemplate="""
 \\textfloatsep 6pt
 \\floatsep  6pt
 \\intextsep 6pt
+\\abovecaptionskip 0pt
+
 \\graphicspath{ {{{GraphicsPath}}} }
 
 \\begin{document}
